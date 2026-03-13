@@ -1,39 +1,39 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
-import { loadSystem, saveSystem } from "@/lib/storage"
-import { ensureSeedData } from "@/lib/ensureSeedData"
+import { createContext, useContext, useEffect, useSyncExternalStore } from "react"
+import {
+  getSystemSnapshot,
+  refreshStoredSystem,
+  subscribeSystem,
+  updateStoredSystem
+} from "@/lib/storage"
 
 const TeeshaContext = createContext()
 
 export function TeeshaProvider({ children }) {
 
-  const [system, setSystem] = useState(null)
+  const system = useSyncExternalStore(
+    subscribeSystem,
+    getSystemSnapshot,
+    () => null
+  )
 
   useEffect(() => {
+    refreshStoredSystem()
 
-    let data = loadSystem()
+    window.addEventListener("focus", refreshStoredSystem)
+    document.addEventListener("visibilitychange", refreshStoredSystem)
+    const intervalId = window.setInterval(refreshStoredSystem, 60 * 1000)
 
-    // seed BEFORE state is set
-    const raw = localStorage.getItem("teeshaOS")
-
-    if (raw) {
-      ensureSeedData()
-      data = JSON.parse(localStorage.getItem("teeshaOS"))
+    return () => {
+      window.removeEventListener("focus", refreshStoredSystem)
+      document.removeEventListener("visibilitychange", refreshStoredSystem)
+      window.clearInterval(intervalId)
     }
-
-    setSystem(data)
-
   }, [])
 
-  useEffect(() => {
-    if (system) {
-      saveSystem(system)
-    }
-  }, [system])
-
   return (
-    <TeeshaContext.Provider value={{ system, setSystem }}>
+    <TeeshaContext.Provider value={{ system, setSystem: updateStoredSystem }}>
       {children}
     </TeeshaContext.Provider>
   )

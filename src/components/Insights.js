@@ -8,51 +8,37 @@ export default function Insights() {
 
   if (!system) return null
 
-  const insights = []
-
-  const tasksDone = system.dailyTodos.filter(t => t.completed).length
-  const totalTasks = system.dailyTodos.length
-
-  if (totalTasks > 0 && tasksDone / totalTasks < 0.4) {
-    insights.push("Execution drift detected")
-  }
-
-  const lastBio = system.biometrics.at(-1)
-
-  if (lastBio && lastBio.sleep < 6) {
-    insights.push("Sleep debt detected")
-  }
-
-  if (lastBio && lastBio.energy < 4) {
-    insights.push("Low energy levels")
-  }
-
-  const lastEmotion = system.emotions.at(-1)
-
-  if (lastEmotion && lastEmotion.mood < 4) {
-    insights.push("Mood instability detected")
-  }
-
-  if (lastEmotion && lastEmotion.stress > 7) {
-    insights.push("High stress state")
-  }
+  const morningInsight = system.insights?.morning
+  const nightInsight = system.insights?.night
 
   return (
     <div>
 
       <h2 className="text-xl font-bold mb-3">
-        System Insights
+        Daily Insights
       </h2>
 
-      {insights.length === 0 && (
-        <div>No insights yet.</div>
-      )}
+      <div className="space-y-3">
 
-      {insights.map((insight, index) => (
-        <div key={index}>
-          • {insight}
+        <div>
+          <div className="font-semibold">
+            Morning
+          </div>
+          <div>
+            {morningInsight?.text ?? "Morning insight appears after the morning check-in."}
+          </div>
         </div>
-      ))}
+
+        <div>
+          <div className="font-semibold">
+            Night
+          </div>
+          <div>
+            {nightInsight?.text ?? "Night insight appears after the night check-in."}
+          </div>
+        </div>
+
+      </div>
 
     </div>
   )

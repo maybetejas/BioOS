@@ -1,21 +1,31 @@
 "use client"
 
 import { useState } from "react"
-import { useTeesha } from "../context/TeeshaContext"
+import { useTeesha } from "@/context/TeeshaContext"
+import { getDayKey } from "@/lib/systemLogic"
 
 export default function DailyTodos() {
 
   const { system, setSystem } = useTeesha()
   const [text, setText] = useState("")
+  const [error, setError] = useState("")
 
   if (!system) return null
 
   function addTodo() {
+    const cleanText = text.trim()
+
+    if (!cleanText) {
+      setError("Enter a task before adding it.")
+      return
+    }
 
     const newTodo = {
       id: Date.now(),
-      text,
-      completed: false
+      text: cleanText,
+      completed: false,
+      createdAt: new Date().toISOString(),
+      periodKey: getDayKey()
     }
 
     setSystem({
@@ -24,6 +34,7 @@ export default function DailyTodos() {
     })
 
     setText("")
+    setError("")
   }
 
   function toggleTodo(id) {
@@ -37,6 +48,34 @@ export default function DailyTodos() {
     setSystem({
       ...system,
       dailyTodos: updated
+    })
+  }
+
+  function restorePending(id) {
+    const pending = system.pendingDailyTodos.find((todo) => todo.id === id)
+
+    if (!pending) return
+
+    setSystem({
+      ...system,
+      dailyTodos: [
+        ...system.dailyTodos,
+        {
+          id: pending.id,
+          text: pending.text,
+          completed: false,
+          createdAt: pending.movedAt,
+          periodKey: getDayKey()
+        }
+      ],
+      pendingDailyTodos: system.pendingDailyTodos.filter((todo) => todo.id !== id)
+    })
+  }
+
+  function deletePending(id) {
+    setSystem({
+      ...system,
+      pendingDailyTodos: system.pendingDailyTodos.filter((todo) => todo.id !== id)
     })
   }
 
@@ -65,15 +104,52 @@ export default function DailyTodos() {
 
         <input
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value)
+            if (error) {
+              setError("")
+            }
+          }}
           className="border px-2"
         />
 
-        <button onClick={addTodo} className="border px-3">
+        <button onClick={addTodo} className="border px-3" disabled={!text.trim()}>
           Add
         </button>
 
       </div>
+
+      {error && (
+        <div className="mt-2 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      {system.pendingDailyTodos.length > 0 && (
+        <div className="mt-4 space-y-2">
+
+          <h3 className="font-semibold">
+            Pending Daily Tasks
+          </h3>
+
+          {system.pendingDailyTodos.map((todo) => (
+            <div key={todo.id} className="flex items-center gap-2">
+              <span className="flex-1">
+                {todo.text}
+              </span>
+
+              <button onClick={() => restorePending(todo.id)} className="border px-2">
+                Add Back
+              </button>
+
+              <button onClick={() => deletePending(todo.id)} className="border px-2">
+                Delete
+              </button>
+            </div>
+          ))}
+
+        </div>
+      )}
 
     </div>
   )
