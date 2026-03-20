@@ -1990,9 +1990,48 @@ function getDayNumber(date = new Date()) {
   return Math.floor(Date.UTC(year, month, day) / 86400000)
 }
 
+function positiveModulo(value, divisor) {
+  return ((value % divisor) + divisor) % divisor
+}
+
+function gcd(a, b) {
+  let x = Math.abs(a)
+  let y = Math.abs(b)
+
+  while (y !== 0) {
+    const temp = y
+    y = x % y
+    x = temp
+  }
+
+  return x
+}
+
+function getCoPrimeStep(length) {
+  let step = Math.floor(length / 2) + 1
+
+  while (gcd(step, length) !== 1) {
+    step += 1
+  }
+
+  return step
+}
+
 export function getRussianWordOfTheDay(date = new Date()) {
+  const listLength = RUSSIAN_WORDS.length
+
+  if (listLength === 0) {
+    return undefined
+  }
+
   const dayNumber = getDayNumber(date)
-  const wordIndex = ((dayNumber % RUSSIAN_WORDS.length) + RUSSIAN_WORDS.length) % RUSSIAN_WORDS.length
+  const normalizedDay = positiveModulo(dayNumber, listLength)
+
+  // Use a deterministic "shuffled cycle" so each day jumps to a different
+  // part of the list instead of walking nearby entries in order.
+  const cycleStep = getCoPrimeStep(listLength)
+  const startOffset = positiveModulo(97, listLength)
+  const wordIndex = (startOffset + normalizedDay * cycleStep) % listLength
 
   return RUSSIAN_WORDS[wordIndex]
 }
@@ -2006,4 +2045,3 @@ export function getRussianWordByOffset(dayOffset = 0, baseDate = new Date()) {
     word: getRussianWordOfTheDay(targetDate)
   }
 }
-
