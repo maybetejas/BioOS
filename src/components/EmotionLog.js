@@ -74,62 +74,64 @@ export default function EmotionLog() {
   }
 
   return (
-    <div>
+    <section className="border border-red-200/40 bg-gradient-to-br from-red-950/85 via-neutral-950 to-slate-950 px-4 py-4 text-white">
 
-      <h2 className="text-xl font-bold mb-1">
+      <h2 className="mb-1 text-xl font-bold">
         Night Check-In
       </h2>
 
-      <p className="mb-3 text-sm text-gray-600">
+      <p className="mb-3 text-sm text-red-100/75">
         Log how the day felt before saving your night insight.
       </p>
 
-      <input
-        placeholder="Mood 1-10"
-        value={mood}
-        onChange={(e) => {
-          setMood(e.target.value)
-          if (error) {
-            setError("")
-          }
-        }}
-        className="border px-2 mr-2"
-      />
+      <div className="flex flex-wrap gap-2">
+        <input
+          placeholder="Mood 1-10"
+          value={mood}
+          onChange={(e) => {
+            setMood(e.target.value)
+            if (error) {
+              setError("")
+            }
+          }}
+          className="min-w-0 flex-1 basis-[150px] border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+        />
 
-      <input
-        placeholder="Stress 1-10"
-        value={stress}
-        onChange={(e) => {
-          setStress(e.target.value)
-          if (error) {
-            setError("")
-          }
-        }}
-        className="border px-2 mr-2"
-      />
+        <input
+          placeholder="Stress 1-10"
+          value={stress}
+          onChange={(e) => {
+            setStress(e.target.value)
+            if (error) {
+              setError("")
+            }
+          }}
+          className="min-w-0 flex-1 basis-[150px] border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+        />
 
-      <input
-        placeholder="Focus 1-10"
-        value={focus}
-        onChange={(e) => {
-          setFocus(e.target.value)
-          if (error) {
-            setError("")
-          }
-        }}
-        className="border px-2 mr-2"
-      />
+        <input
+          placeholder="Focus 1-10"
+          value={focus}
+          onChange={(e) => {
+            setFocus(e.target.value)
+            if (error) {
+              setError("")
+            }
+          }}
+          className="min-w-0 flex-1 basis-[150px] border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+        />
 
-      <button onClick={submit} className="border px-3">
-        Save
-      </button>
+        <button onClick={submit} className="shrink-0 border border-white/30 px-3 py-1 text-sm">
+          Save
+        </button>
+      </div>
 
       {error && (
-        <div className="mt-2 text-sm text-red-600">
+        <div className="mt-2 text-sm text-red-200">
           {error}
         </div>
       )}
 
-    </div>
+    </section>
   )
 }

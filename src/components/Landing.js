@@ -54,6 +54,16 @@ const STATUS_STYLES = {
   "Recovery Mode": "text-rose-600"
 }
 
+const MOMENTUM_BAR_STYLES = {
+  "Dominant Momentum": "from-amber-400 via-amber-300 to-yellow-200",
+  "Stable Growth": "from-emerald-500 via-emerald-400 to-lime-300",
+  "Execution Drift": "from-sky-500 via-cyan-400 to-blue-300",
+  "Energy Instability": "from-orange-500 via-amber-400 to-yellow-300",
+  "Recovery Mode": "from-rose-600 via-rose-500 to-orange-400"
+}
+
+const MINI_WIDGET_CLASS = "border border-red-200/40 bg-gradient-to-br from-red-950/85 via-neutral-950 to-slate-950 px-3 py-2 text-white"
+
 export default function Landing() {
 
   const { system, setSystem } = useTeesha()
@@ -99,6 +109,8 @@ export default function Landing() {
   const { date: selectedWordDate, word: selectedWord } = getRussianWordByOffset(wordDayOffset)
   const { word: todayWord } = getRussianWordByOffset(0)
   const statusStyle = STATUS_STYLES[status] ?? "border-neutral-300 text-neutral-700"
+  const barStyle = MOMENTUM_BAR_STYLES[status] ?? MOMENTUM_BAR_STYLES["Execution Drift"]
+  const momentumWidth = `${Math.max(0, Math.min(100, momentum))}%`
 
   const completedTasks = system.dailyTodos.filter((t) => t.completed).length
   const totalTasks = system.dailyTodos.length
@@ -156,19 +168,27 @@ export default function Landing() {
         </button>
       )}
 
-      <div className="mb-2">
-        <button
-          type="button"
-          onClick={() => setIsMomentumGuideOpen(true)}
-          className="underline underline-offset-2"
-        >
-          Momentum Score: {momentum}
-        </button>
-      </div>
-
       <div className={`mb-2 ${statusStyle}`}>
         System Status: {status}
       </div>
+
+      <button
+        type="button"
+        onClick={() => setIsMomentumGuideOpen(true)}
+        className="mb-3 w-full border border-neutral-700/60 bg-neutral-900/50 px-2.5 py-2 text-left text-white"
+      >
+        <div className="mb-1 flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-neutral-300">
+          <span>Momentum</span>
+          <span>{momentum}/100</span>
+        </div>
+
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
+          <div
+            className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${barStyle}`}
+            style={{ width: momentumWidth }}
+          />
+        </div>
+      </button>
 
       <div className="mb-4 border-l-2 border-neutral-400 pl-4 text-white">
         <p className="italic leading-7">
@@ -207,49 +227,74 @@ export default function Landing() {
 
       <DailyStructure />
 
-      <div className="mb-2">
-        Tasks Completed: {completedTasks}/{totalTasks}
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className={MINI_WIDGET_CLASS}>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-red-200">
+            Tasks
+          </div>
+          <div className="mt-1 text-lg font-semibold">
+            {completedTasks}/{totalTasks}
+          </div>
+        </div>
+
+        <details className={MINI_WIDGET_CLASS}>
+          <summary className="cursor-pointer list-none text-[11px] uppercase tracking-[0.22em] text-red-200">
+            Acquired Habits ({acquiredHabits.length})
+          </summary>
+
+          <div className="mt-2 space-y-1 text-sm text-red-100/90">
+            {acquiredHabits.length > 0
+              ? acquiredHabits.map((habit) => (
+                  <div key={habit.id}>
+                    {habit.name}
+                  </div>
+                ))
+              : "No habits acquired yet."}
+          </div>
+        </details>
+
+        <div className={MINI_WIDGET_CLASS}>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-red-200">
+            Biological
+          </div>
+          <div className="mt-1 text-sm">
+            {lastBio
+              ? `Sleep ${lastBio.sleep}h | Energy ${lastBio.energy}`
+              : "No morning check-in yet."}
+          </div>
+        </div>
+
+        <div className={MINI_WIDGET_CLASS}>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-red-200">
+            Emotional
+          </div>
+          <div className="mt-1 text-sm">
+            {lastEmotion
+              ? `Mood ${lastEmotion.mood} | Stress ${lastEmotion.stress} | Focus ${lastEmotion.focus}`
+              : "No night check-in yet."}
+          </div>
+        </div>
       </div>
 
-      <details className="mb-2">
-        <summary>
-          Acquired Habits ({acquiredHabits.length})
-        </summary>
-
-        <div className="mt-2">
-          {acquiredHabits.length > 0
-            ? acquiredHabits.map((habit) => (
-                <div key={habit.id}>
-                  {habit.name}
-                </div>
-              ))
-            : "No habits acquired yet."}
+      <div className="mb-4 space-y-2">
+        <div className={MINI_WIDGET_CLASS}>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-red-200">
+            Morning Insight
+          </div>
+          <div className="mt-1 text-sm text-red-100/90">
+            {morningInsight?.text ?? "Morning insight appears after morning check-in."}
+          </div>
         </div>
-      </details>
 
-      {lastBio && (
-        <div className="mb-2">
-          Sleep: {lastBio.sleep}h | Energy: {lastBio.energy}
+        <div className={MINI_WIDGET_CLASS}>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-red-200">
+            Night Insight
+          </div>
+          <div className="mt-1 text-sm text-red-100/90">
+            {nightInsight?.text ?? "Night insight appears after night check-in."}
+          </div>
         </div>
-      )}
-
-      {lastEmotion && (
-        <div>
-          Mood: {lastEmotion.mood} | Stress: {lastEmotion.stress} | Focus: {lastEmotion.focus}
-        </div>
-      )}
-
-      {morningInsight && (
-        <div className="mt-4">
-          Morning Insight: {morningInsight.text}
-        </div>
-      )}
-
-      {nightInsight && (
-        <div className="mt-2">
-          Night Insight: {nightInsight.text}
-        </div>
-      )}
+      </div>
 
       {isMomentumGuideOpen && (
         <div className="mb-4 border px-3 py-3">

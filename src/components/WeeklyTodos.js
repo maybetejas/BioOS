@@ -80,20 +80,21 @@ export default function WeeklyTodos() {
   }
 
   return (
-    <div>
+    <section className="border border-red-200/40 bg-gradient-to-br from-red-950/85 via-neutral-950 to-slate-950 px-4 py-4 text-white">
 
-      <h2 className="text-xl font-bold mb-3">
+      <h2 className="mb-3 text-xl font-bold">
         Weekly Goals
       </h2>
 
       {system.weeklyTodos.map(todo => (
 
-        <div key={todo.id} className="flex gap-2">
+        <div key={todo.id} className="mb-1.5 flex gap-2">
 
           <input
             type="checkbox"
             checked={todo.completed}
             onChange={() => toggleTodo(todo.id)}
+            className="accent-red-400"
           />
 
           <span>{todo.text}</span>
@@ -102,7 +103,7 @@ export default function WeeklyTodos() {
 
       ))}
 
-      <div className="flex gap-2 mt-3">
+      <div className="mt-3 flex gap-2">
 
         <input
           value={text}
@@ -112,17 +113,17 @@ export default function WeeklyTodos() {
               setError("")
             }
           }}
-          className="border px-2"
+          className="flex-1 border border-white/30 bg-neutral-900 px-2 py-1 text-white"
         />
 
-        <button onClick={addTodo} className="border px-3" disabled={!text.trim()}>
+        <button onClick={addTodo} className="border border-white/30 px-3 py-1 text-sm" disabled={!text.trim()}>
           Add
         </button>
 
       </div>
 
       {error && (
-        <div className="mt-2 text-sm text-red-600">
+        <div className="mt-2 text-sm text-red-200">
           {error}
         </div>
       )}
@@ -130,7 +131,7 @@ export default function WeeklyTodos() {
       {system.pendingWeeklyTodos.length > 0 && (
         <div className="mt-4 space-y-2">
 
-          <h3 className="font-semibold">
+          <h3 className="font-semibold text-red-100">
             Pending Weekly Goals
           </h3>
 
@@ -140,11 +141,11 @@ export default function WeeklyTodos() {
                 {todo.text}
               </span>
 
-              <button onClick={() => restorePending(todo.id)} className="border px-2">
+              <button onClick={() => restorePending(todo.id)} className="border border-white/30 px-2 py-1 text-sm">
                 Add Back
               </button>
 
-              <button onClick={() => deletePending(todo.id)} className="border px-2">
+              <button onClick={() => deletePending(todo.id)} className="border border-red-200/40 px-2 py-1 text-sm text-red-100">
                 Delete
               </button>
             </div>
@@ -153,6 +154,6 @@ export default function WeeklyTodos() {
         </div>
       )}
 
-    </div>
+    </section>
   )
 }

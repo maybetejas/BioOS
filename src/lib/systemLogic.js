@@ -266,6 +266,23 @@ function normalizeInsight(insight) {
   }
 }
 
+function normalizeMomentumSnapshot(entry, now) {
+  const score = Number(entry?.score)
+
+  if (!Number.isFinite(score)) {
+    return null
+  }
+
+  const recordedAt = entry?.recordedAt ?? entry?.date ?? new Date(now).toISOString()
+  const dateKey = entry?.dateKey ?? getDayKey(new Date(recordedAt))
+
+  return {
+    dateKey,
+    score: Math.max(0, Math.min(100, Math.round(score))),
+    recordedAt
+  }
+}
+
 function looksLikeLegacyDemoData(incoming) {
   if (incoming?.meta) {
     return false
@@ -371,6 +388,7 @@ export function createDefaultSystem(now = new Date()) {
       morning: null,
       night: null
     },
+    momentumHistory: [],
     meta: createMeta(now)
   }
 }
@@ -414,6 +432,10 @@ export function normalizeSystem(rawSystem, now = new Date()) {
       morning: normalizeInsight(incoming.insights?.morning),
       night: normalizeInsight(incoming.insights?.night)
     },
+    momentumHistory: (incoming.momentumHistory ?? [])
+      .map((entry) => normalizeMomentumSnapshot(entry, now))
+      .filter(Boolean)
+      .sort((left, right) => new Date(left.recordedAt) - new Date(right.recordedAt)),
     meta: {
       ...createMeta(now),
       ...(incoming.meta ?? {})

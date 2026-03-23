@@ -57,50 +57,52 @@ export default function Biometrics() {
   }
 
   return (
-    <div>
+    <section className="border border-red-200/40 bg-gradient-to-br from-red-950/85 via-neutral-950 to-slate-950 px-4 py-4 text-white">
 
-      <h2 className="text-xl font-bold mb-1">
+      <h2 className="mb-1 text-xl font-bold">
         Morning Check-In
       </h2>
 
-      <p className="mb-3 text-sm text-gray-600">
+      <p className="mb-3 text-sm text-red-100/75">
         Log sleep and energy before the day starts.
       </p>
 
-      <input
-        placeholder="Sleep Hours"
-        value={sleep}
-        onChange={(e) => {
-          setSleep(e.target.value)
-          if (error) {
-            setError("")
-          }
-        }}
-        className="border px-2 mr-2"
-      />
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+        <input
+          placeholder="Sleep Hours"
+          value={sleep}
+          onChange={(e) => {
+            setSleep(e.target.value)
+            if (error) {
+              setError("")
+            }
+          }}
+          className="border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+        />
 
-      <input
-        placeholder="Energy 1-10"
-        value={energy}
-        onChange={(e) => {
-          setEnergy(e.target.value)
-          if (error) {
-            setError("")
-          }
-        }}
-        className="border px-2 mr-2"
-      />
+        <input
+          placeholder="Energy 1-10"
+          value={energy}
+          onChange={(e) => {
+            setEnergy(e.target.value)
+            if (error) {
+              setError("")
+            }
+          }}
+          className="border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+        />
 
-      <button onClick={submit} className="border px-3">
-        Save
-      </button>
+        <button onClick={submit} className="border border-white/30 px-3 py-1 text-sm">
+          Save
+        </button>
+      </div>
 
       {error && (
-        <div className="mt-2 text-sm text-red-600">
+        <div className="mt-2 text-sm text-red-200">
           {error}
         </div>
       )}
 
-    </div>
+    </section>
   )
 }

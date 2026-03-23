@@ -6,10 +6,10 @@ import WeeklyTodos from "@/components/WeeklyTodos"
 import Habits from "@/components/Habits"
 import Biometrics from "@/components/Biometrics"
 import EmotionLog from "@/components/EmotionLog"
-import Insights from "@/components/Insights"
 
 import SleepChart from "@/components/charts/SleepChart"
 import EnergyChart from "@/components/charts/EnergyChart"
+import MomentumTrendChart from "@/components/charts/MomentumTrendChart"
 
 export default function Page() {
 
@@ -22,6 +22,8 @@ export default function Page() {
 
       <EnergyChart />
 
+      <MomentumTrendChart />
+
       <DailyTodos />
 
       <WeeklyTodos />
@@ -31,8 +33,6 @@ export default function Page() {
       <Biometrics />
 
       <EmotionLog />
-
-      <Insights />
 
     </div>
   )

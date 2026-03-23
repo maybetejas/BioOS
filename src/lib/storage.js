@@ -1,10 +1,20 @@
-import { createDefaultSystem, normalizeSystem } from "@/lib/systemLogic"
+import { createDefaultSystem, getDayKey, normalizeSystem } from "@/lib/systemLogic"
+import { calculateMomentum } from "@/lib/momentum"
 
 const STORAGE_KEY = "teeshaOS.v2"
 const LEGACY_STORAGE_KEYS = ["teeshaOS"]
 const listeners = new Set()
 
 let cachedSnapshot = null
+
+function upsertMomentumSnapshot(history, snapshot) {
+  const safeHistory = Array.isArray(history) ? history : []
+
+  return [
+    ...safeHistory.filter((entry) => entry.dateKey !== snapshot.dateKey),
+    snapshot
+  ].sort((left, right) => new Date(left.recordedAt) - new Date(right.recordedAt))
+}
 
 function clearLegacyStorage() {
   LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key))
@@ -36,12 +46,23 @@ function readStoredSystem() {
 
 function writeStoredSystem(system) {
   const normalized = normalizeSystem(system)
+  const now = new Date()
+  const momentum = calculateMomentum(normalized)
+  const snapshot = {
+    dateKey: getDayKey(now),
+    score: momentum,
+    recordedAt: now.toISOString()
+  }
+  const withMomentumHistory = {
+    ...normalized,
+    momentumHistory: upsertMomentumSnapshot(normalized.momentumHistory, snapshot)
+  }
 
   clearLegacyStorage()
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized))
-  cachedSnapshot = normalized
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(withMomentumHistory))
+  cachedSnapshot = withMomentumHistory
 
-  return normalized
+  return withMomentumHistory
 }
 
 export function loadSystem() {
