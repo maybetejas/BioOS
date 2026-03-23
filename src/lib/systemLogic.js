@@ -1,5 +1,14 @@
 const DAY_MS = 24 * 60 * 60 * 1000
 export const ACQUIRED_HABIT_STREAK = 7
+export const DEFAULT_ROUTINE_TAGS = ["skill", "financial", "physical", "free"]
+
+export const DEFAULT_ROUTINE_TEMPLATE = [
+  { id: "study-interviews", startTime: "08:00", endTime: "10:30", label: "Study (Interviews)", type: "skill" },
+  { id: "washy-study", startTime: "11:30", endTime: "14:00", label: "Washy + Study", type: "financial" },
+  { id: "freelance-work", startTime: "15:00", endTime: "17:00", label: "Freelance Work", type: "financial" },
+  { id: "workout", startTime: "17:00", endTime: "18:00", label: "Workout", type: "physical" },
+  { id: "free-flexible", startTime: "18:00", endTime: "23:00", label: "Free / Flexible", type: "free" }
+]
 
 function pad(value) {
   return String(value).padStart(2, "0")
@@ -58,6 +67,109 @@ function createMeta(now) {
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : ""
+}
+
+function normalizeRoutineType(type) {
+  const normalized = normalizeText(type).toLowerCase()
+  return normalized || "free"
+}
+
+function normalizeRoutineTags(tags, template) {
+  const incoming = Array.isArray(tags) ? tags : []
+  const normalizedIncoming = incoming
+    .map((tag) => normalizeRoutineType(tag))
+    .filter(Boolean)
+
+  const tagsFromTemplate = (template ?? [])
+    .map((block) => normalizeRoutineType(block?.type))
+    .filter(Boolean)
+
+  const allTags = [...DEFAULT_ROUTINE_TAGS, ...normalizedIncoming, ...tagsFromTemplate]
+
+  return [...new Set(allTags)]
+}
+
+function toTimeParts(value) {
+  const match = normalizeText(value).match(/^(\d{1,2}):(\d{2})$/)
+
+  if (!match) {
+    return null
+  }
+
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) {
+    return null
+  }
+
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return null
+  }
+
+  return { hours, minutes }
+}
+
+function normalizeTimeValue(value) {
+  const parts = toTimeParts(value)
+
+  if (!parts) {
+    return null
+  }
+
+  return `${pad(parts.hours)}:${pad(parts.minutes)}`
+}
+
+function timeToMinutes(value) {
+  const parts = toTimeParts(value)
+
+  if (!parts) {
+    return null
+  }
+
+  return (parts.hours * 60) + parts.minutes
+}
+
+function normalizeRoutineBlock(block, index) {
+  const label = normalizeText(block?.label)
+
+  if (!label) {
+    return null
+  }
+
+  const startTime = normalizeTimeValue(block?.startTime)
+  const endTime = normalizeTimeValue(block?.endTime)
+
+  if (!startTime || !endTime) {
+    return null
+  }
+
+  const startMinutes = timeToMinutes(startTime)
+  const endMinutes = timeToMinutes(endTime)
+
+  if (startMinutes === null || endMinutes === null || startMinutes >= endMinutes) {
+    return null
+  }
+
+  return {
+    id: block?.id ?? `routine-${index}-${startTime.replace(":", "")}-${endTime.replace(":", "")}`,
+    startTime,
+    endTime,
+    label,
+    type: normalizeRoutineType(block?.type)
+  }
+}
+
+function normalizeDailyStructure(dailyStructure, todayKey, routineTemplate) {
+  const completedIds = Array.isArray(dailyStructure?.completedBlockIds)
+    ? dailyStructure.completedBlockIds
+    : []
+  const validIds = new Set(routineTemplate.map((block) => block.id))
+
+  return {
+    dayKey: typeof dailyStructure?.dayKey === "string" ? dailyStructure.dayKey : todayKey,
+    completedBlockIds: completedIds.filter((id) => validIds.has(id))
+  }
 }
 
 function normalizeTask(task, type, now) {
@@ -200,6 +312,11 @@ function rolloverDaily(system, todayKey, now) {
     ...system,
     dailyTodos: [],
     pendingDailyTodos: [...unfinished, ...system.pendingDailyTodos],
+    dailyStructure: {
+      ...(system.dailyStructure ?? {}),
+      dayKey: todayKey,
+      completedBlockIds: []
+    },
     habits,
     meta: {
       ...system.meta,
@@ -242,6 +359,12 @@ export function createDefaultSystem(now = new Date()) {
     pendingDailyTodos: [],
     pendingWeeklyTodos: [],
     habits: [],
+    routineTags: DEFAULT_ROUTINE_TAGS,
+    routineTemplate: DEFAULT_ROUTINE_TEMPLATE,
+    dailyStructure: {
+      dayKey: getDayKey(now),
+      completedBlockIds: []
+    },
     biometrics: [],
     emotions: [],
     insights: {
@@ -280,6 +403,11 @@ export function normalizeSystem(rawSystem, now = new Date()) {
     pendingDailyTodos: (incoming.pendingDailyTodos ?? []).map((todo) => normalizePendingTask(todo, "daily", now)).filter(Boolean),
     pendingWeeklyTodos: (incoming.pendingWeeklyTodos ?? []).map((todo) => normalizePendingTask(todo, "weekly", now)).filter(Boolean),
     habits: (incoming.habits ?? []).map(normalizeHabit).filter(Boolean),
+    routineTags: [],
+    routineTemplate: (incoming.routineTemplate ?? base.routineTemplate)
+      .map((block, index) => normalizeRoutineBlock(block, index))
+      .filter(Boolean)
+      .sort((left, right) => timeToMinutes(left.startTime) - timeToMinutes(right.startTime)),
     biometrics: (incoming.biometrics ?? []).map((entry) => normalizeBiometric(entry, now)).filter(Boolean),
     emotions: (incoming.emotions ?? []).map((entry) => normalizeEmotion(entry, now)).filter(Boolean),
     insights: {
@@ -292,8 +420,11 @@ export function normalizeSystem(rawSystem, now = new Date()) {
     }
   }
 
+  system.routineTags = normalizeRoutineTags(incoming.routineTags, system.routineTemplate)
+
   const todayKey = getDayKey(now)
   const weekKey = getWeekKey(now)
+  system.dailyStructure = normalizeDailyStructure(incoming.dailyStructure, todayKey, system.routineTemplate)
 
   system = rolloverDaily(system, todayKey, now)
   system = rolloverWeekly(system, weekKey, now)

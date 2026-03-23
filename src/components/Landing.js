@@ -6,42 +6,43 @@ import { calculateMomentum, getSystemStatus } from "@/lib/momentum"
 import { getAcquiredHabits } from "@/lib/systemLogic"
 import { getQuoteOfTheDay } from "@/lib/quotes"
 import { getRussianWordByOffset } from "@/lib/russianWords"
+import DailyStructure from "@/components/DailyStructure"
 
 const MOMENTUM_GUIDE = [
   {
     label: "Dominant Momentum",
-    range: "80-100",
+    range: "85-100",
     tone: "text-amber-700",
-    description: "You are executing hard and staying emotionally steady.",
-    actions: "Keep tasks moving, finish habits early, and protect your energy so the pace stays sustainable."
+    description: "Execution, structure, and state are aligned.",
+    actions: "Protect this by finishing the active block, closing key tasks, and preserving sleep and stress control."
   },
   {
     label: "Stable Growth",
-    range: "60-79",
+    range: "65-84",
     tone: "text-emerald-600",
-    description: "You are on track and building momentum well.",
-    actions: "Complete one more key task, close remaining habits, and log a strong mood or energy check-in."
+    description: "Good control across most systems with room to sharpen.",
+    actions: "Complete the current structure block and close one high-leverage task to push into dominant momentum."
   },
   {
     label: "Execution Drift",
-    range: "40-59",
+    range: "45-64",
     tone: "text-sky-600",
-    description: "Progress is happening, but not enough to feel locked in yet.",
-    actions: "Finish a few tasks now, remove distractions, and tighten the rest of your day into smaller wins."
+    description: "Some activity is present, but follow-through is fragmented.",
+    actions: "Use your time block as anchor: finish one block cleanly, complete one habit, then close one task."
   },
   {
     label: "Energy Instability",
-    range: "20-39",
+    range: "25-44",
     tone: "text-orange-600",
-    description: "Low consistency or low energy is pulling the day down.",
-    actions: "Handle one easy task, complete one habit, and improve your basics like food, water, sleep, or a short walk."
+    description: "Execution is being pulled down by low consistency or weak state.",
+    actions: "Do one small block now, reduce decision load, and stabilize with hydration, food, and a short reset."
   },
   {
     label: "Recovery Mode",
-    range: "0-19",
+    range: "0-24",
     tone: "text-rose-600",
     description: "This is a reset state, not a failure state.",
-    actions: "Start tiny: log your mood or energy, finish one simple task, and rebuild control with the smallest useful action."
+    actions: "Start tiny: complete one micro-block, log your state, and regain control with one small, certain win."
   }
 ]
 
@@ -204,6 +205,8 @@ export default function Landing() {
         </div>
       </button>
 
+      <DailyStructure />
+
       <div className="mb-2">
         Tasks Completed: {completedTasks}/{totalTasks}
       </div>
@@ -265,7 +268,7 @@ export default function Landing() {
           </div>
 
           <p className="mb-3 text-sm text-gray-600">
-            Your score comes from completed tasks, completed habits, and your latest mood and energy logs.
+            Your score now blends tasks, habits, daily structure completion, and your latest biological and emotional state.
           </p>
 
           <div className="space-y-3">
