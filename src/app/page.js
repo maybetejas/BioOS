@@ -6,34 +6,38 @@ import WeeklyTodos from "@/components/WeeklyTodos"
 import Habits from "@/components/Habits"
 import Biometrics from "@/components/Biometrics"
 import EmotionLog from "@/components/EmotionLog"
+import ThemeCustomizer from "@/components/ThemeCustomizer"
 
-import SleepChart from "@/components/charts/SleepChart"
 import EnergyChart from "@/components/charts/EnergyChart"
 import MomentumTrendChart from "@/components/charts/MomentumTrendChart"
 
 export default function Page() {
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-8">
+    <div className="mx-auto max-w-3xl p-3 sm:p-5">
+      <div className="app-frame">
+        <div className="app-content px-4 py-5 sm:px-6 sm:py-6">
 
-      <Landing />
+          <Landing />
 
-      <SleepChart />
+          <EnergyChart />
 
-      <EnergyChart />
+          <MomentumTrendChart />
 
-      <MomentumTrendChart />
+          <DailyTodos />
 
-      <DailyTodos />
+          <WeeklyTodos />
 
-      <WeeklyTodos />
+          <Habits />
 
-      <Habits />
+          <Biometrics />
 
-      <Biometrics />
+          <EmotionLog />
 
-      <EmotionLog />
+          <ThemeCustomizer />
 
+        </div>
+      </div>
     </div>
   )
 }

@@ -68,13 +68,15 @@ export default function Habits() {
   }
 
   return (
-    <section className="border border-red-200/40 bg-gradient-to-br from-red-950/85 via-neutral-950 to-slate-950 px-4 py-4 text-white">
+    <section className="terminal-section mt-6">
 
       <h2 className="mb-2 text-xl font-bold">
+        <span className="terminal-glow-text">
         Habits
+        </span>
       </h2>
 
-      <p className="mb-3 text-sm text-red-100/75">
+      <p className="terminal-subtext mb-3 text-sm">
         Checking a habit marks it completed for today. After 7 straight days it shows up as acquired, and it drops off that list if the streak breaks.
       </p>
 
@@ -86,7 +88,7 @@ export default function Habits() {
             type="checkbox"
             checked={habit.completedToday}
             onChange={() => toggleHabit(habit.id)}
-            className="accent-red-400"
+            style={{ accentColor: "var(--accent)" }}
           />
 
           <span>
@@ -107,17 +109,17 @@ export default function Habits() {
               setError("")
             }
           }}
-          className="flex-1 border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+          className="terminal-input flex-1 px-2 py-1"
         />
 
-        <button onClick={addHabit} className="border border-white/30 px-3 py-1 text-sm" disabled={!text.trim()}>
+        <button onClick={addHabit} className="terminal-button px-3 py-1 text-sm disabled:opacity-40" disabled={!text.trim()}>
           Add
         </button>
 
       </div>
 
       {error && (
-        <div className="mt-2 text-sm text-red-200">
+        <div className="terminal-error mt-2 text-sm">
           {error}
         </div>
       )}

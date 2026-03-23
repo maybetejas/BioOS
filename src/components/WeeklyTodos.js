@@ -80,10 +80,12 @@ export default function WeeklyTodos() {
   }
 
   return (
-    <section className="border border-red-200/40 bg-gradient-to-br from-red-950/85 via-neutral-950 to-slate-950 px-4 py-4 text-white">
+    <section className="terminal-section mt-6">
 
       <h2 className="mb-3 text-xl font-bold">
+        <span className="terminal-glow-text">
         Weekly Goals
+        </span>
       </h2>
 
       {system.weeklyTodos.map(todo => (
@@ -94,7 +96,7 @@ export default function WeeklyTodos() {
             type="checkbox"
             checked={todo.completed}
             onChange={() => toggleTodo(todo.id)}
-            className="accent-red-400"
+            style={{ accentColor: "var(--accent)" }}
           />
 
           <span>{todo.text}</span>
@@ -113,17 +115,17 @@ export default function WeeklyTodos() {
               setError("")
             }
           }}
-          className="flex-1 border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+          className="terminal-input flex-1 px-2 py-1"
         />
 
-        <button onClick={addTodo} className="border border-white/30 px-3 py-1 text-sm" disabled={!text.trim()}>
+        <button onClick={addTodo} className="terminal-button px-3 py-1 text-sm disabled:opacity-40" disabled={!text.trim()}>
           Add
         </button>
 
       </div>
 
       {error && (
-        <div className="mt-2 text-sm text-red-200">
+        <div className="terminal-error mt-2 text-sm">
           {error}
         </div>
       )}
@@ -131,7 +133,7 @@ export default function WeeklyTodos() {
       {system.pendingWeeklyTodos.length > 0 && (
         <div className="mt-4 space-y-2">
 
-          <h3 className="font-semibold text-red-100">
+          <h3 className="font-semibold terminal-glow-text">
             Pending Weekly Goals
           </h3>
 
@@ -141,11 +143,11 @@ export default function WeeklyTodos() {
                 {todo.text}
               </span>
 
-              <button onClick={() => restorePending(todo.id)} className="border border-white/30 px-2 py-1 text-sm">
+              <button onClick={() => restorePending(todo.id)} className="terminal-button-muted px-2 py-1 text-sm">
                 Add Back
               </button>
 
-              <button onClick={() => deletePending(todo.id)} className="border border-red-200/40 px-2 py-1 text-sm text-red-100">
+              <button onClick={() => deletePending(todo.id)} className="terminal-button px-2 py-1 text-sm">
                 Delete
               </button>
             </div>

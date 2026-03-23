@@ -5,10 +5,10 @@ import { useTeesha } from "@/context/TeeshaContext"
 import { getDayKey } from "@/lib/systemLogic"
 
 const TYPE_STYLES = {
-  skill: "border-sky-300/30 bg-sky-500/10 text-sky-100",
-  financial: "border-emerald-300/30 bg-emerald-500/10 text-emerald-100",
-  physical: "border-amber-300/30 bg-amber-500/10 text-amber-100",
-  free: "border-neutral-300/30 bg-white/10 text-neutral-100"
+  skill: "terminal-chip",
+  financial: "terminal-chip",
+  physical: "terminal-chip",
+  free: "terminal-chip-muted"
 }
 
 function toMinutes(timeValue) {
@@ -93,7 +93,7 @@ function getTypeStyle(type) {
   if (type === "financial") return TYPE_STYLES.financial
   if (type === "physical") return TYPE_STYLES.physical
   if (type === "free") return TYPE_STYLES.free
-  return "border-fuchsia-300/30 bg-fuchsia-500/10 text-fuchsia-100"
+  return "terminal-chip"
 }
 
 export default function DailyStructure() {
@@ -267,26 +267,26 @@ export default function DailyStructure() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="mb-4 w-full border border-red-200/60 bg-gradient-to-br from-red-950 via-neutral-950 to-slate-950 px-4 py-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+        className="terminal-card mb-4 w-full px-4 py-4 text-left"
       >
-        <div className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-red-200">
+        <div className="terminal-label mb-1">
           Daily Structure
         </div>
 
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="text-2xl font-semibold text-white">
+            <div className="terminal-glow-text text-2xl font-semibold">
               {activeBlock ? activeBlock.label : "Off-Structure Window"}
             </div>
 
-            <div className="mt-1 text-sm text-red-100/85">
+            <div className="terminal-subtext mt-1 text-sm">
               {activeBlock
-                ? `${formatTime(activeBlock.startTime)} - ${formatTime(activeBlock.endTime)} - You should be doing this right now, get to it.`
+                ? `${formatTime(activeBlock.startTime)} - ${formatTime(activeBlock.endTime)} - You should be doing this right now.`
                 : "No active block right now. Open to view your full flow."}
             </div>
           </div>
 
-          <div className="text-sm text-red-100 underline underline-offset-4">
+          <div className="terminal-chip inline-flex w-fit px-3 py-1 text-sm">
             Open
           </div>
         </div>
@@ -294,20 +294,20 @@ export default function DailyStructure() {
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6"
+          className="terminal-overlay fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto border border-red-200/20 bg-neutral-950 px-5 py-5 text-white shadow-2xl"
+            className="terminal-modal max-h-[90vh] w-full max-w-2xl overflow-y-auto px-5 py-5 text-white"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5 flex items-start justify-between gap-3">
               <div>
-                <div className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-red-200">
+                <div className="terminal-label mb-1">
                   Daily Structure
                 </div>
 
-                <div className="text-sm text-neutral-300">
+                <div className="terminal-subtext text-sm">
                   {activeBlock
                     ? `Active now: ${activeBlock.label} (${formatTime(activeBlock.startTime)} - ${formatTime(activeBlock.endTime)})`
                     : "No active block right now"}
@@ -317,14 +317,14 @@ export default function DailyStructure() {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="border border-white/15 px-3 py-1 text-sm text-neutral-200"
+                className="terminal-button-muted px-3 py-1 text-sm"
               >
                 Close
               </button>
             </div>
 
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-              <span className="border border-red-300/20 bg-red-400/10 px-2 py-1 text-red-100">
+              <span className="terminal-chip px-2 py-1">
                 Completion: {completedCount}/{blockCount}
               </span>
               <button
@@ -334,7 +334,7 @@ export default function DailyStructure() {
                   resetForm()
                   setNewTag("")
                 }}
-                className="border border-white/20 bg-white/10 px-2 py-1 text-neutral-100 hover:bg-white/15"
+                className="terminal-button-muted px-2 py-1"
               >
                 {isEditing ? "View Flow" : "Edit Blocks"}
               </button>
@@ -349,14 +349,10 @@ export default function DailyStructure() {
                   return (
                     <div
                       key={block.id}
-                      className={`border px-4 py-3 ${
-                        isActive
-                          ? "border-red-300/30 bg-red-400/10"
-                          : "border-white/10 bg-white/5"
-                      }`}
+                      className={isActive ? "terminal-card px-4 py-3" : "border border-white/10 bg-white/5 px-4 py-3"}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="text-sm font-semibold text-neutral-200">
+                        <div className="terminal-subtext text-sm font-semibold">
                           {formatTime(block.startTime)} - {formatTime(block.endTime)}
                         </div>
                         <div className="flex items-center gap-2">
@@ -364,7 +360,7 @@ export default function DailyStructure() {
                             {formatType(block.type)}
                           </span>
                           {isActive && (
-                            <span className="border border-red-300/30 bg-red-500/20 px-2 py-0.5 text-xs text-red-100">
+                            <span className="terminal-chip px-2 py-0.5 text-xs">
                               Active Now
                             </span>
                           )}
@@ -380,7 +376,8 @@ export default function DailyStructure() {
                           type="checkbox"
                           checked={isCompleted}
                           onChange={() => toggleBlockCompletion(block.id)}
-                          className="h-4 w-4 accent-red-400"
+                          className="h-4 w-4"
+                          style={{ accentColor: "var(--accent)" }}
                         />
                         {isCompleted ? "Completed" : "Mark Completed"}
                       </label>
@@ -394,7 +391,7 @@ export default function DailyStructure() {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="border border-red-300/30 bg-red-500/20 px-3 py-1 text-sm text-red-100 hover:bg-red-500/25"
+                    className="terminal-button px-3 py-1 text-sm"
                   >
                     Add New Block
                   </button>
@@ -412,14 +409,14 @@ export default function DailyStructure() {
                         <button
                           type="button"
                           onClick={() => startEditing(block)}
-                          className="border border-white/20 px-2 py-1 text-xs text-neutral-100 hover:bg-white/10"
+                          className="terminal-button-muted px-2 py-1 text-xs"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => deleteBlock(block.id)}
-                          className="border border-red-200/30 px-2 py-1 text-xs text-red-100 hover:bg-red-500/15"
+                          className="terminal-button px-2 py-1 text-xs"
                         >
                           Delete
                         </button>
@@ -428,7 +425,7 @@ export default function DailyStructure() {
                   ))}
                 </div>
 
-                <div className="border border-white/10 bg-white/5 p-3">
+                <div className="terminal-card p-3">
                   <div className="mb-2 text-sm font-semibold text-neutral-100">
                     {form.id ? "Edit Block" : "Add Block"}
                   </div>
@@ -438,24 +435,24 @@ export default function DailyStructure() {
                       type="time"
                       value={form.startTime}
                       onChange={(event) => setForm((current) => ({ ...current, startTime: event.target.value }))}
-                      className="border border-white/20 bg-neutral-900 px-2 py-1 text-sm text-white"
+                      className="terminal-input px-2 py-1 text-sm"
                     />
                     <input
                       type="time"
                       value={form.endTime}
                       onChange={(event) => setForm((current) => ({ ...current, endTime: event.target.value }))}
-                      className="border border-white/20 bg-neutral-900 px-2 py-1 text-sm text-white"
+                      className="terminal-input px-2 py-1 text-sm"
                     />
                     <input
                       value={form.label}
                       onChange={(event) => setForm((current) => ({ ...current, label: event.target.value }))}
                       placeholder="Label"
-                      className="border border-white/20 bg-neutral-900 px-2 py-1 text-sm text-white sm:col-span-2"
+                      className="terminal-input px-2 py-1 text-sm sm:col-span-2"
                     />
                     <select
                       value={form.type}
                       onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))}
-                      className="border border-white/20 bg-neutral-900 px-2 py-1 text-sm text-white"
+                      className="terminal-select px-2 py-1 text-sm"
                     >
                       {routineTags.map((type) => (
                         <option key={type} value={type}>
@@ -470,19 +467,19 @@ export default function DailyStructure() {
                       value={newTag}
                       onChange={(event) => setNewTag(event.target.value)}
                       placeholder="New tag (e.g. admin)"
-                      className="flex-1 border border-white/20 bg-neutral-900 px-2 py-1 text-sm text-white"
+                      className="terminal-input flex-1 px-2 py-1 text-sm"
                     />
                     <button
                       type="button"
                       onClick={addTag}
-                      className="border border-white/20 px-3 py-1 text-sm text-neutral-100 hover:bg-white/10"
+                      className="terminal-button-muted px-3 py-1 text-sm"
                     >
                       Add Tag
                     </button>
                   </div>
 
                   {error && (
-                    <div className="mt-2 text-sm text-red-200">
+                    <div className="terminal-error mt-2 text-sm">
                       {error}
                     </div>
                   )}
@@ -491,7 +488,7 @@ export default function DailyStructure() {
                     <button
                       type="button"
                       onClick={saveBlock}
-                      className="border border-red-300/30 bg-red-500/20 px-3 py-1 text-sm text-red-100 hover:bg-red-500/25"
+                      className="terminal-button px-3 py-1 text-sm"
                     >
                       Save
                     </button>
@@ -499,7 +496,7 @@ export default function DailyStructure() {
                     <button
                       type="button"
                       onClick={resetForm}
-                      className="border border-white/20 px-3 py-1 text-sm text-neutral-100 hover:bg-white/10"
+                      className="terminal-button-muted px-3 py-1 text-sm"
                     >
                       Clear
                     </button>

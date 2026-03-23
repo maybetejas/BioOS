@@ -8,8 +8,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
-  Legend
+  CartesianGrid
 } from "recharts"
 
 function toDateLabel(dayKey) {
@@ -34,24 +33,6 @@ export default function MomentumTrendChart() {
     })
   })
 
-  ;(system.biometrics ?? []).forEach((entry) => {
-    if (!entry?.dateKey) return
-
-    byDay.set(entry.dateKey, {
-      ...(byDay.get(entry.dateKey) ?? { dateKey: entry.dateKey }),
-      energy: Number(entry.energy)
-    })
-  })
-
-  ;(system.emotions ?? []).forEach((entry) => {
-    if (!entry?.dateKey) return
-
-    byDay.set(entry.dateKey, {
-      ...(byDay.get(entry.dateKey) ?? { dateKey: entry.dateKey }),
-      mood: Number(entry.mood)
-    })
-  })
-
   const data = [...byDay.values()]
     .sort((left, right) => new Date(left.dateKey) - new Date(right.dateKey))
     .map((entry) => ({
@@ -64,14 +45,10 @@ export default function MomentumTrendChart() {
   }
 
   return (
-    <div className="w-full">
-      <h2 className="mb-1 text-lg font-semibold">
+    <section className="terminal-section mt-6 w-full">
+      <h2 className="terminal-glow-text mb-1 text-lg font-semibold">
         Momentum Trend
       </h2>
-
-      <p className="mb-3 text-sm text-gray-500">
-        Day-by-day momentum with energy and mood context.
-      </p>
 
       <div className="h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -79,61 +56,31 @@ export default function MomentumTrendChart() {
             data={data}
             margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
           >
-            <CartesianGrid stroke="#333" strokeDasharray="3 3" />
+            <CartesianGrid stroke="var(--terminal-grid)" strokeDasharray="3 3" />
 
-            <XAxis dataKey="date" stroke="#777" />
+            <XAxis dataKey="date" stroke="var(--terminal-text-soft)" />
 
             <YAxis
               yAxisId="momentum"
               domain={[0, 100]}
-              stroke="#f59e0b"
-            />
-
-            <YAxis
-              yAxisId="state"
-              orientation="right"
-              domain={[0, 10]}
-              stroke="#777"
+              stroke="var(--terminal-text-soft)"
             />
 
             <Tooltip />
-            <Legend />
 
             <Line
               yAxisId="momentum"
               type="monotone"
               dataKey="momentum"
               name="Momentum"
-              stroke="#f59e0b"
+              stroke="var(--accent)"
               strokeWidth={3}
               dot={{ r: 3 }}
-              connectNulls
-            />
-
-            <Line
-              yAxisId="state"
-              type="monotone"
-              dataKey="energy"
-              name="Energy"
-              stroke="#22c55e"
-              strokeWidth={2}
-              dot={{ r: 2 }}
-              connectNulls
-            />
-
-            <Line
-              yAxisId="state"
-              type="monotone"
-              dataKey="mood"
-              name="Mood"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              dot={{ r: 2 }}
               connectNulls
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </section>
   )
 }

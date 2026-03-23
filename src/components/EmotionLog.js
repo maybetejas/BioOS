@@ -74,13 +74,15 @@ export default function EmotionLog() {
   }
 
   return (
-    <section className="border border-red-200/40 bg-gradient-to-br from-red-950/85 via-neutral-950 to-slate-950 px-4 py-4 text-white">
+    <section className="terminal-section mt-6">
 
       <h2 className="mb-1 text-xl font-bold">
+        <span className="terminal-glow-text">
         Night Check-In
+        </span>
       </h2>
 
-      <p className="mb-3 text-sm text-red-100/75">
+      <p className="terminal-subtext mb-3 text-sm">
         Log how the day felt before saving your night insight.
       </p>
 
@@ -94,7 +96,7 @@ export default function EmotionLog() {
               setError("")
             }
           }}
-          className="min-w-0 flex-1 basis-[150px] border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+          className="terminal-input min-w-0 flex-1 basis-[150px] px-2 py-1"
         />
 
         <input
@@ -106,7 +108,7 @@ export default function EmotionLog() {
               setError("")
             }
           }}
-          className="min-w-0 flex-1 basis-[150px] border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+          className="terminal-input min-w-0 flex-1 basis-[150px] px-2 py-1"
         />
 
         <input
@@ -118,16 +120,16 @@ export default function EmotionLog() {
               setError("")
             }
           }}
-          className="min-w-0 flex-1 basis-[150px] border border-white/30 bg-neutral-900 px-2 py-1 text-white"
+          className="terminal-input min-w-0 flex-1 basis-[150px] px-2 py-1"
         />
 
-        <button onClick={submit} className="shrink-0 border border-white/30 px-3 py-1 text-sm">
+        <button onClick={submit} className="terminal-button shrink-0 px-3 py-1 text-sm">
           Save
         </button>
       </div>
 
       {error && (
-        <div className="mt-2 text-sm text-red-200">
+        <div className="terminal-error mt-2 text-sm">
           {error}
         </div>
       )}

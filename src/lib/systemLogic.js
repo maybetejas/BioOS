@@ -1,6 +1,7 @@
 const DAY_MS = 24 * 60 * 60 * 1000
 export const ACQUIRED_HABIT_STREAK = 7
 export const DEFAULT_ROUTINE_TAGS = ["skill", "financial", "physical", "free"]
+export const DEFAULT_THEME_ACCENT = "#6dff8b"
 
 export const DEFAULT_ROUTINE_TEMPLATE = [
   { id: "study-interviews", startTime: "08:00", endTime: "10:30", label: "Study (Interviews)", type: "skill" },
@@ -67,6 +68,11 @@ function createMeta(now) {
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : ""
+}
+
+function normalizeThemeAccent(value) {
+  const normalized = normalizeText(value)
+  return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toLowerCase() : DEFAULT_THEME_ACCENT
 }
 
 function normalizeRoutineType(type) {
@@ -371,6 +377,7 @@ export function createDefaultSystem(now = new Date()) {
   return {
     schemaVersion: 2,
     appName: "Accountability Tracker",
+    themeAccent: DEFAULT_THEME_ACCENT,
     dailyTodos: [],
     weeklyTodos: [],
     pendingDailyTodos: [],
@@ -416,6 +423,7 @@ export function normalizeSystem(rawSystem, now = new Date()) {
     ...incoming,
     schemaVersion: base.schemaVersion,
     appName: normalizeText(incoming.appName) || base.appName,
+    themeAccent: normalizeThemeAccent(incoming.themeAccent),
     dailyTodos: (incoming.dailyTodos ?? []).map((todo) => normalizeTask(todo, "daily", now)).filter(Boolean),
     weeklyTodos: (incoming.weeklyTodos ?? []).map((todo) => normalizeTask(todo, "weekly", now)).filter(Boolean),
     pendingDailyTodos: (incoming.pendingDailyTodos ?? []).map((todo) => normalizePendingTask(todo, "daily", now)).filter(Boolean),
