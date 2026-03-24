@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTeesha } from "@/context/TeeshaContext"
 import { getWeekKey } from "@/lib/systemLogic"
+import StatusCheckbox from "@/components/ui/StatusCheckbox"
 
 export default function WeeklyTodos() {
 
@@ -28,10 +29,10 @@ export default function WeeklyTodos() {
       periodKey: getWeekKey()
     }
 
-    setSystem({
-      ...system,
-      weeklyTodos: [...system.weeklyTodos, newTodo]
-    })
+    setSystem((current) => ({
+      ...current,
+      weeklyTodos: [...current.weeklyTodos, newTodo]
+    }))
 
     setText("")
     setError("")
@@ -39,16 +40,14 @@ export default function WeeklyTodos() {
 
   function toggleTodo(id) {
 
-    const updated = system.weeklyTodos.map(todo =>
-      todo.id === id
-        ? { ...todo, completed: !todo.completed }
-        : todo
-    )
-
-    setSystem({
-      ...system,
-      weeklyTodos: updated
-    })
+    setSystem((current) => ({
+      ...current,
+      weeklyTodos: current.weeklyTodos.map((todo) =>
+        todo.id === id
+          ? { ...todo, completed: !todo.completed }
+          : todo
+      )
+    }))
   }
 
   function restorePending(id) {
@@ -56,10 +55,10 @@ export default function WeeklyTodos() {
 
     if (!pending) return
 
-    setSystem({
-      ...system,
+    setSystem((current) => ({
+      ...current,
       weeklyTodos: [
-        ...system.weeklyTodos,
+        ...current.weeklyTodos,
         {
           id: pending.id,
           text: pending.text,
@@ -68,15 +67,15 @@ export default function WeeklyTodos() {
           periodKey: getWeekKey()
         }
       ],
-      pendingWeeklyTodos: system.pendingWeeklyTodos.filter((todo) => todo.id !== id)
-    })
+      pendingWeeklyTodos: current.pendingWeeklyTodos.filter((todo) => todo.id !== id)
+    }))
   }
 
   function deletePending(id) {
-    setSystem({
-      ...system,
-      pendingWeeklyTodos: system.pendingWeeklyTodos.filter((todo) => todo.id !== id)
-    })
+    setSystem((current) => ({
+      ...current,
+      pendingWeeklyTodos: current.pendingWeeklyTodos.filter((todo) => todo.id !== id)
+    }))
   }
 
   return (
@@ -90,17 +89,10 @@ export default function WeeklyTodos() {
 
       {system.weeklyTodos.map(todo => (
 
-        <div key={todo.id} className="mb-1.5 flex gap-2">
-
-          <input
-            type="checkbox"
-            checked={todo.completed}
-            onChange={() => toggleTodo(todo.id)}
-            style={{ accentColor: "var(--accent)" }}
-          />
-
-          <span>{todo.text}</span>
-
+        <div key={todo.id} className="mb-2">
+          <StatusCheckbox checked={todo.completed} onChange={() => toggleTodo(todo.id)}>
+            {todo.text}
+          </StatusCheckbox>
         </div>
 
       ))}

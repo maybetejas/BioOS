@@ -14,27 +14,27 @@ import MomentumTrendChart from "@/components/charts/MomentumTrendChart"
 export default function Page() {
 
   return (
-    <div className="mx-auto max-w-3xl p-3 sm:p-5">
+    <div className="mx-auto max-w-6xl px-3 py-4 sm:px-5 sm:py-6">
       <div className="app-frame">
-        <div className="app-content px-4 py-5 sm:px-6 sm:py-6">
+        <div className="app-content px-1 py-2 sm:px-2 sm:py-3">
 
           <Landing />
 
-          <EnergyChart />
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
+            <div>
+              <DailyTodos />
+              <WeeklyTodos />
+              <Habits />
+              <ThemeCustomizer />
+            </div>
 
-          <MomentumTrendChart />
-
-          <DailyTodos />
-
-          <WeeklyTodos />
-
-          <Habits />
-
-          <Biometrics />
-
-          <EmotionLog />
-
-          <ThemeCustomizer />
+            <div>
+              <Biometrics />
+              <EmotionLog />
+              <EnergyChart />
+              <MomentumTrendChart />
+            </div>
+          </div>
 
         </div>
       </div>

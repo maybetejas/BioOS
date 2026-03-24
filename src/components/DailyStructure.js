@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useTeesha } from "@/context/TeeshaContext"
 import { getDayKey } from "@/lib/systemLogic"
+import StatusCheckbox from "@/components/ui/StatusCheckbox"
 
 const TYPE_STYLES = {
   skill: "terminal-chip",
@@ -147,14 +148,14 @@ export default function DailyStructure() {
     const validIds = new Set(sortedTemplate.map((block) => block.id))
     const nextCompleted = completedBlockIds.filter((id) => validIds.has(id))
 
-    setSystem({
-      ...system,
+    setSystem((current) => ({
+      ...current,
       routineTemplate: sortedTemplate,
       dailyStructure: {
         dayKey: todayKey,
         completedBlockIds: nextCompleted
       }
-    })
+    }))
   }
 
   function toggleBlockCompletion(blockId) {
@@ -163,13 +164,13 @@ export default function DailyStructure() {
       ? completedBlockIds.filter((id) => id !== blockId)
       : [...completedBlockIds, blockId]
 
-    setSystem({
-      ...system,
+    setSystem((current) => ({
+      ...current,
       dailyStructure: {
         dayKey: todayKey,
         completedBlockIds: nextCompleted
       }
-    })
+    }))
   }
 
   function resetForm() {
@@ -193,10 +194,10 @@ export default function DailyStructure() {
       return
     }
 
-    setSystem({
-      ...system,
+    setSystem((current) => ({
+      ...current,
       routineTags: [...routineTags, normalizedTag]
-    })
+    }))
     setForm((current) => ({ ...current, type: normalizedTag }))
     setNewTag("")
     setError("")
@@ -232,15 +233,15 @@ export default function DailyStructure() {
 
     const templateWithoutCurrent = system.routineTemplate.filter((block) => block.id !== form.id)
     const shouldAddTag = !routineTags.includes(nextBlock.type)
-    setSystem({
-      ...system,
+    setSystem((current) => ({
+      ...current,
       routineTags: shouldAddTag ? [...routineTags, nextBlock.type] : routineTags,
       routineTemplate: [...templateWithoutCurrent, nextBlock].sort((left, right) => toMinutes(left.startTime) - toMinutes(right.startTime)),
       dailyStructure: {
         dayKey: todayKey,
         completedBlockIds: completedBlockIds.filter((id) => id !== nextBlock.id || templateWithoutCurrent.some((block) => block.id === id))
       }
-    })
+    }))
     resetForm()
   }
 
@@ -371,16 +372,11 @@ export default function DailyStructure() {
                         {block.label}
                       </div>
 
-                      <label className="mt-2 inline-flex items-center gap-2 text-sm text-neutral-200">
-                        <input
-                          type="checkbox"
-                          checked={isCompleted}
-                          onChange={() => toggleBlockCompletion(block.id)}
-                          className="h-4 w-4"
-                          style={{ accentColor: "var(--accent)" }}
-                        />
+                      <div className="mt-2 text-sm text-neutral-200">
+                        <StatusCheckbox checked={isCompleted} onChange={() => toggleBlockCompletion(block.id)}>
                         {isCompleted ? "Completed" : "Mark Completed"}
-                      </label>
+                        </StatusCheckbox>
+                      </div>
                     </div>
                   )
                 })}

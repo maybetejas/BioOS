@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTeesha } from "@/context/TeeshaContext"
 import { getDayKey } from "@/lib/systemLogic"
+import StatusCheckbox from "@/components/ui/StatusCheckbox"
 
 export default function DailyTodos() {
 
@@ -28,10 +29,10 @@ export default function DailyTodos() {
       periodKey: getDayKey()
     }
 
-    setSystem({
-      ...system,
-      dailyTodos: [...system.dailyTodos, newTodo]
-    })
+    setSystem((current) => ({
+      ...current,
+      dailyTodos: [...current.dailyTodos, newTodo]
+    }))
 
     setText("")
     setError("")
@@ -39,16 +40,14 @@ export default function DailyTodos() {
 
   function toggleTodo(id) {
 
-    const updated = system.dailyTodos.map(todo =>
-      todo.id === id
-        ? { ...todo, completed: !todo.completed }
-        : todo
-    )
-
-    setSystem({
-      ...system,
-      dailyTodos: updated
-    })
+    setSystem((current) => ({
+      ...current,
+      dailyTodos: current.dailyTodos.map((todo) =>
+        todo.id === id
+          ? { ...todo, completed: !todo.completed }
+          : todo
+      )
+    }))
   }
 
   function restorePending(id) {
@@ -56,10 +55,10 @@ export default function DailyTodos() {
 
     if (!pending) return
 
-    setSystem({
-      ...system,
+    setSystem((current) => ({
+      ...current,
       dailyTodos: [
-        ...system.dailyTodos,
+        ...current.dailyTodos,
         {
           id: pending.id,
           text: pending.text,
@@ -68,15 +67,15 @@ export default function DailyTodos() {
           periodKey: getDayKey()
         }
       ],
-      pendingDailyTodos: system.pendingDailyTodos.filter((todo) => todo.id !== id)
-    })
+      pendingDailyTodos: current.pendingDailyTodos.filter((todo) => todo.id !== id)
+    }))
   }
 
   function deletePending(id) {
-    setSystem({
-      ...system,
-      pendingDailyTodos: system.pendingDailyTodos.filter((todo) => todo.id !== id)
-    })
+    setSystem((current) => ({
+      ...current,
+      pendingDailyTodos: current.pendingDailyTodos.filter((todo) => todo.id !== id)
+    }))
   }
 
   return (
@@ -86,17 +85,10 @@ export default function DailyTodos() {
 
       {system.dailyTodos.map(todo => (
 
-        <div key={todo.id} className="mb-1.5 flex gap-2">
-
-          <input
-            type="checkbox"
-            checked={todo.completed}
-            onChange={() => toggleTodo(todo.id)}
-            style={{ accentColor: "var(--accent)" }}
-          />
-
-          <span>{todo.text}</span>
-
+        <div key={todo.id} className="mb-2">
+          <StatusCheckbox checked={todo.completed} onChange={() => toggleTodo(todo.id)}>
+            {todo.text}
+          </StatusCheckbox>
         </div>
 
       ))}

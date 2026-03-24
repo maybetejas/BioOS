@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTeesha } from "@/context/TeeshaContext"
 import { getDayKey } from "@/lib/systemLogic"
+import StatusCheckbox from "@/components/ui/StatusCheckbox"
 
 export default function Habits() {
 
@@ -29,10 +30,10 @@ export default function Habits() {
       previousCompletedOn: null
     }
 
-    setSystem({
-      ...system,
-      habits: [...system.habits, newHabit]
-    })
+    setSystem((current) => ({
+      ...current,
+      habits: [...current.habits, newHabit]
+    }))
 
     setText("")
   }
@@ -40,9 +41,12 @@ export default function Habits() {
   function toggleHabit(id) {
     const todayKey = getDayKey()
 
-    const updated = system.habits.map(habit => {
-
-      if (habit.id === id) {
+    setSystem((current) => ({
+      ...current,
+      habits: current.habits.map((habit) => {
+        if (habit.id !== id) {
+          return habit
+        }
 
         const completed = !habit.completedToday
         const lastCompletedOn = habit.lastCompletedOn
@@ -56,15 +60,8 @@ export default function Habits() {
           lastCompletedOn: completed ? todayKey : habit.previousCompletedOn,
           previousCompletedOn: completed ? lastCompletedOn : null
         }
-      }
-
-      return habit
-    })
-
-    setSystem({
-      ...system,
-      habits: updated
-    })
+      })
+    }))
   }
 
   return (
@@ -82,19 +79,10 @@ export default function Habits() {
 
       {system.habits.map(habit => (
 
-        <div key={habit.id} className="mb-1.5 flex gap-2">
-
-          <input
-            type="checkbox"
-            checked={habit.completedToday}
-            onChange={() => toggleHabit(habit.id)}
-            style={{ accentColor: "var(--accent)" }}
-          />
-
-          <span>
+        <div key={habit.id} className="mb-2">
+          <StatusCheckbox checked={habit.completedToday} onChange={() => toggleHabit(habit.id)}>
             {habit.name} (Streak: {habit.streak})
-          </span>
-
+          </StatusCheckbox>
         </div>
 
       ))}

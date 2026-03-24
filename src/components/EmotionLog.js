@@ -46,24 +46,26 @@ export default function EmotionLog() {
       focus: parsedFocus
     }
 
-    const tasksCompleted = system.dailyTodos.filter((todo) => todo.completed).length
-    const totalTasks = system.dailyTodos.length
-    const habitsCompleted = system.habits.filter((habit) => habit.completedToday).length
+    setSystem((current) => {
+      const tasksCompleted = current.dailyTodos.filter((todo) => todo.completed).length
+      const totalTasks = current.dailyTodos.length
+      const habitsCompleted = current.habits.filter((habit) => habit.completedToday).length
 
-    setSystem({
-      ...system,
-      emotions: upsertEntryByDay(system.emotions, entry),
-      insights: {
-        ...system.insights,
-        night: buildNightInsight({
-          mood: parsedMood,
-          stress: parsedStress,
-          focus: parsedFocus,
-          tasksCompleted,
-          totalTasks,
-          habitsCompleted,
-          date: dateKey
-        })
+      return {
+        ...current,
+        emotions: upsertEntryByDay(current.emotions, entry),
+        insights: {
+          ...current.insights,
+          night: buildNightInsight({
+            mood: parsedMood,
+            stress: parsedStress,
+            focus: parsedFocus,
+            tasksCompleted,
+            totalTasks,
+            habitsCompleted,
+            date: dateKey
+          })
+        }
       }
     })
 

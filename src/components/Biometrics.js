@@ -38,18 +38,18 @@ export default function Biometrics() {
       energy: parsedEnergy
     }
 
-    setSystem({
-      ...system,
-      biometrics: upsertEntryByDay(system.biometrics, entry),
+    setSystem((current) => ({
+      ...current,
+      biometrics: upsertEntryByDay(current.biometrics, entry),
       insights: {
-        ...system.insights,
+        ...current.insights,
         morning: buildMorningInsight({
           sleep: parsedSleep,
           energy: parsedEnergy,
           date: dateKey
         })
       }
-    })
+    }))
 
     setSleep("")
     setEnergy("")
