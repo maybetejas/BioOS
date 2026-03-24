@@ -56,6 +56,21 @@ body::before {
   opacity: 0.7;
 }
 
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12) 0.6px, transparent 0.8px),
+    radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.08) 0.5px, transparent 0.8px),
+    radial-gradient(circle at 40% 70%, rgba(255, 255, 255, 0.1) 0.7px, transparent 0.9px),
+    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.06) 0.6px, transparent 0.8px);
+  background-size: 140px 140px, 180px 180px, 160px 160px, 210px 210px;
+  mix-blend-mode: soft-light;
+}
+
 ::selection {
   background: rgba(var(--accent-rgb), 0.38);
   color: white;
@@ -250,4 +265,70 @@ body::before {
   background: transparent;
   padding: 0.2rem;
   cursor: pointer;
+}
+
+.heartbeat-shell {
+  position: relative;
+}
+
+.heartbeat-track {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(var(--accent-rgb), 0.16);
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.32), rgba(var(--accent-deep-rgb), 0.24)),
+    radial-gradient(circle at center, rgba(var(--accent-rgb), 0.08), transparent 72%);
+  min-height: 3.35rem;
+}
+
+.heartbeat-svg {
+  display: block;
+  height: 3.35rem;
+  width: 100%;
+}
+
+.heartbeat-baseline {
+  fill: none;
+  stroke: rgba(var(--accent-rgb), 0.16);
+  stroke-width: 1;
+}
+
+.heartbeat-path {
+  fill: none;
+  stroke: var(--accent-strong);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 210 150;
+  animation-name: heartbeat-drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.heartbeat-scan {
+  position: absolute;
+  inset: 0 auto 0 -25%;
+  width: 25%;
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.15), transparent);
+  animation: heartbeat-scan 3.6s linear infinite;
+}
+
+@keyframes heartbeat-drift {
+  from {
+    stroke-dashoffset: 360;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes heartbeat-scan {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(520%);
+  }
 }

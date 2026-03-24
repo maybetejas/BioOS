@@ -7,6 +7,7 @@ import { getAcquiredHabits } from "@/lib/systemLogic"
 import { getQuoteOfTheDay } from "@/lib/quotes"
 import { getRussianWordByOffset } from "@/lib/russianWords"
 import DailyStructure from "@/components/DailyStructure"
+import HeartbeatSignal from "@/components/ui/HeartbeatSignal"
 
 const MOMENTUM_GUIDE = [
   {
@@ -165,6 +166,8 @@ export default function Landing() {
             }}
           />
         </div>
+
+        <HeartbeatSignal momentum={momentum} />
       </button>
 
       <div className="terminal-divider mb-5 border-l-2 pl-4">
