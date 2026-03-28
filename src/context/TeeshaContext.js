@@ -11,17 +11,21 @@ import {
 
 const TeeshaContext = createContext()
 
-function hexToRgbString(hex) {
+function hexToRgb(hex) {
   const normalized = String(hex).replace("#", "")
 
   if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
-    return "109, 255, 139"
+    return { red: 109, green: 255, blue: 139 }
   }
 
-  const red = Number.parseInt(normalized.slice(0, 2), 16)
-  const green = Number.parseInt(normalized.slice(2, 4), 16)
-  const blue = Number.parseInt(normalized.slice(4, 6), 16)
+  return {
+    red: Number.parseInt(normalized.slice(0, 2), 16),
+    green: Number.parseInt(normalized.slice(2, 4), 16),
+    blue: Number.parseInt(normalized.slice(4, 6), 16)
+  }
+}
 
+function rgbToString({ red, green, blue }) {
   return `${red}, ${green}, ${blue}`
 }
 
@@ -29,38 +33,105 @@ function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
 }
 
-function scaleRgb(rgbString, factor) {
-  const [red, green, blue] = rgbString.split(",").map((part) => Number(part.trim()))
-
-  if (![red, green, blue].every(Number.isFinite)) {
-    return "109, 255, 139"
-  }
-
-  return [
-    clampChannel(red * factor),
-    clampChannel(green * factor),
-    clampChannel(blue * factor)
-  ].join(", ")
+function scaleRgb(rgb, factor) {
+  return rgbToString({
+    red: clampChannel(rgb.red * factor),
+    green: clampChannel(rgb.green * factor),
+    blue: clampChannel(rgb.blue * factor)
+  })
 }
 
-function mixRgb(rgbString, target, amount) {
-  const [red, green, blue] = rgbString.split(",").map((part) => Number(part.trim()))
+function mixRgb(source, target, amount) {
+  return rgbToString({
+    red: clampChannel(source.red + ((target.red - source.red) * amount)),
+    green: clampChannel(source.green + ((target.green - source.green) * amount)),
+    blue: clampChannel(source.blue + ((target.blue - source.blue) * amount))
+  })
+}
 
-  if (![red, green, blue].every(Number.isFinite)) {
-    return "168, 255, 189"
+function rgbToHsl({ red, green, blue }) {
+  const r = red / 255
+  const g = green / 255
+  const b = blue / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const delta = max - min
+
+  let hue = 0
+  const lightness = (max + min) / 2
+  const saturation = delta === 0
+    ? 0
+    : delta / (1 - Math.abs((2 * lightness) - 1))
+
+  if (delta !== 0) {
+    if (max === r) hue = ((g - b) / delta) % 6
+    else if (max === g) hue = ((b - r) / delta) + 2
+    else hue = ((r - g) / delta) + 4
   }
 
-  const mixed = [
-    red + ((target[0] - red) * amount),
-    green + ((target[1] - green) * amount),
-    blue + ((target[2] - blue) * amount)
-  ]
+  return {
+    hue: Math.round((hue * 60 + 360) % 360),
+    saturation,
+    lightness
+  }
+}
 
-  return mixed.map(clampChannel).join(", ")
+function hueToRgb(p, q, t) {
+  let value = t
+
+  if (value < 0) value += 1
+  if (value > 1) value -= 1
+  if (value < 1 / 6) return p + ((q - p) * 6 * value)
+  if (value < 1 / 2) return q
+  if (value < 2 / 3) return p + ((q - p) * ((2 / 3) - value) * 6)
+  return p
+}
+
+function hslToRgb({ hue, saturation, lightness }) {
+  const h = hue / 360
+
+  if (saturation === 0) {
+    const gray = clampChannel(lightness * 255)
+    return { red: gray, green: gray, blue: gray }
+  }
+
+  const q = lightness < 0.5
+    ? lightness * (1 + saturation)
+    : lightness + saturation - (lightness * saturation)
+  const p = (2 * lightness) - q
+
+  return {
+    red: clampChannel(hueToRgb(p, q, h + (1 / 3)) * 255),
+    green: clampChannel(hueToRgb(p, q, h) * 255),
+    blue: clampChannel(hueToRgb(p, q, h - (1 / 3)) * 255)
+  }
+}
+
+function buildThemePalette(hex) {
+  const accentRgb = hexToRgb(hex)
+  const accentHsl = rgbToHsl(accentRgb)
+  const hotRgb = hslToRgb({
+    hue: (accentHsl.hue + 120) % 360,
+    saturation: Math.min(1, Math.max(0.58, accentHsl.saturation)),
+    lightness: Math.min(0.72, Math.max(0.56, accentHsl.lightness + 0.06))
+  })
+  const emberRgb = hslToRgb({
+    hue: (accentHsl.hue + 45) % 360,
+    saturation: Math.min(1, Math.max(0.55, accentHsl.saturation)),
+    lightness: 0.58
+  })
+
+  return {
+    accentRgb: rgbToString(accentRgb),
+    accentDeepRgb: scaleRgb(accentRgb, 0.16),
+    accentMidRgb: scaleRgb(accentRgb, 0.44),
+    accentStrongRgb: mixRgb(accentRgb, { red: 255, green: 255, blue: 255 }, 0.28),
+    hotRgb: rgbToString(hotRgb),
+    emberRgb: rgbToString(emberRgb)
+  }
 }
 
 export function TeeshaProvider({ children }) {
-
   const system = useSyncExternalStore(
     subscribeSystem,
     getSystemSnapshot,
@@ -87,13 +158,15 @@ export function TeeshaProvider({ children }) {
     }
 
     const accent = system?.themeAccent ?? DEFAULT_THEME_ACCENT
-    const accentRgb = hexToRgbString(accent)
+    const palette = buildThemePalette(accent)
 
     document.documentElement.style.setProperty("--accent", accent)
-    document.documentElement.style.setProperty("--accent-rgb", accentRgb)
-    document.documentElement.style.setProperty("--accent-deep-rgb", scaleRgb(accentRgb, 0.18))
-    document.documentElement.style.setProperty("--accent-mid-rgb", scaleRgb(accentRgb, 0.42))
-    document.documentElement.style.setProperty("--accent-strong-rgb", mixRgb(accentRgb, [255, 255, 255], 0.4))
+    document.documentElement.style.setProperty("--accent-rgb", palette.accentRgb)
+    document.documentElement.style.setProperty("--accent-deep-rgb", palette.accentDeepRgb)
+    document.documentElement.style.setProperty("--accent-mid-rgb", palette.accentMidRgb)
+    document.documentElement.style.setProperty("--accent-strong-rgb", palette.accentStrongRgb)
+    document.documentElement.style.setProperty("--hot-rgb", palette.hotRgb)
+    document.documentElement.style.setProperty("--ember-rgb", palette.emberRgb)
   }, [system])
 
   return (
