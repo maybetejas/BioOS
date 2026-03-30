@@ -1,5 +1,12 @@
 const DAY_MS = 24 * 60 * 60 * 1000
 export const DEFAULT_THEME_ACCENT = "#6dff8b"
+export const THEME_ACCENT_CYCLE = [
+  "#d879ff",
+  "#25e7ff",
+  "#7dff5d",
+  "#ff5c7c",
+  "#ffd166"
+]
 
 export const DEFAULT_SCHEDULE = [
   { id: "study-interviews", start: "08:00", end: "10:30", label: "Study (Interviews)" },
@@ -38,6 +45,21 @@ export function getWeekKey(date = new Date()) {
   return `${year}-W${pad(week)}`
 }
 
+export function getMonthKey(date = new Date()) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`
+}
+
+export function getWeekStart(date = new Date()) {
+  const working = new Date(date)
+  working.setHours(0, 0, 0, 0)
+
+  const day = working.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  working.setDate(working.getDate() + diff)
+
+  return working
+}
+
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : ""
 }
@@ -45,6 +67,10 @@ function normalizeText(value) {
 function normalizeThemeAccent(value) {
   const normalized = normalizeText(value)
   return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized.toLowerCase() : DEFAULT_THEME_ACCENT
+}
+
+function normalizeThemeMode(value) {
+  return value === "manual" ? "manual" : "auto"
 }
 
 function normalizeNumber(value, fallback = 0) {
@@ -68,6 +94,10 @@ function normalizeDayKey(value, fallback) {
 
 function normalizeWeekKey(value, fallback) {
   return /^\d{4}-W\d{2}$/.test(String(value)) ? value : fallback
+}
+
+function normalizeMonthKey(value, fallback) {
+  return /^\d{4}-\d{2}$/.test(String(value)) ? value : fallback
 }
 
 function timeToMinutes(value) {
@@ -180,6 +210,20 @@ function normalizeWeeklyGoal(goal, fallbackWeekKey, now) {
   }
 }
 
+function normalizeMonthlyGoal(goal, fallbackMonthKey, now) {
+  const text = normalizeText(goal?.text)
+
+  if (!text) return null
+
+  return {
+    id: goal?.id ?? Date.now() + Math.random(),
+    text,
+    completed: Boolean(goal?.completed),
+    monthKey: normalizeMonthKey(goal?.monthKey ?? goal?.periodKey, fallbackMonthKey),
+    createdAt: normalizeDateString(goal?.createdAt) ?? new Date(now).toISOString()
+  }
+}
+
 function normalizeCheckIn(checkIn) {
   return {
     sleep: normalizeNumber(checkIn?.sleep, 0),
@@ -216,6 +260,7 @@ function normalizeDailyLog(log) {
 
 function normalizeMomentumSnapshot(entry, now) {
   const score = normalizeNumber(entry?.score, NaN)
+  const todayScore = normalizeNumber(entry?.todayScore, NaN)
 
   if (!Number.isFinite(score)) {
     return null
@@ -226,6 +271,7 @@ function normalizeMomentumSnapshot(entry, now) {
   return {
     dateKey: normalizeDayKey(entry?.dateKey, getDayKey(new Date(recordedAt))),
     score: Math.max(0, Math.min(100, Math.round(score))),
+    todayScore: Number.isFinite(todayScore) ? Math.max(0, Math.min(100, Math.round(todayScore))) : 0,
     recordedAt
   }
 }
@@ -319,11 +365,32 @@ function resetMissedHabitStreaks(habits, todayKey) {
   })
 }
 
+function pruneToCurrentWindows(system, now) {
+  const weekStart = getWeekStart(now)
+  const currentWeekKey = getWeekKey(now)
+  const currentMonthKey = getMonthKey(now)
+
+  return {
+    ...system,
+    tasks: system.tasks.filter((task) => {
+      const taskDate = new Date(`${task.date}T00:00:00`)
+      return taskDate >= weekStart
+    }),
+    weeklyGoals: system.weeklyGoals.filter((goal) => goal.weekKey === currentWeekKey),
+    monthlyGoals: system.monthlyGoals.filter((goal) => goal.monthKey === currentMonthKey),
+    dailyLogs: Object.fromEntries(
+      Object.entries(system.dailyLogs).filter(([dayKey]) => new Date(`${dayKey}T00:00:00`) >= weekStart)
+    ),
+    momentumHistory: system.momentumHistory.slice(-90)
+  }
+}
+
 export function createDefaultSystem(now = new Date()) {
   return {
     schemaVersion: 3,
     appName: "Accountability Tracker",
     themeAccent: DEFAULT_THEME_ACCENT,
+    themeMode: "auto",
     schedule: DEFAULT_SCHEDULE,
     mainGoal: {
       title: "Earn 40000 in 30 days",
@@ -340,7 +407,9 @@ export function createDefaultSystem(now = new Date()) {
     tasks: [],
     habits: [],
     weeklyGoals: [],
+    monthlyGoals: [],
     moneyTargetPerDay: 1500,
+    bankBalance: 0,
     momentumHistory: [],
     meta: createMeta(now)
   }
@@ -351,6 +420,7 @@ export function normalizeSystem(rawSystem, now = new Date()) {
   const incoming = rawSystem && typeof rawSystem === "object" ? rawSystem : {}
   const todayKey = getDayKey(now)
   const weekKey = getWeekKey(now)
+  const monthKey = getMonthKey(now)
 
   let system = {
     ...base,
@@ -358,6 +428,7 @@ export function normalizeSystem(rawSystem, now = new Date()) {
     schemaVersion: base.schemaVersion,
     appName: normalizeText(incoming.appName) || base.appName,
     themeAccent: normalizeThemeAccent(incoming.themeAccent),
+    themeMode: normalizeThemeMode(incoming.themeMode),
     schedule: (incoming.schedule ?? incoming.routineTemplate ?? base.schedule)
       .map((block, index) => normalizeScheduleBlock(block, index))
       .filter(Boolean)
@@ -373,8 +444,12 @@ export function normalizeSystem(rawSystem, now = new Date()) {
     weeklyGoals: (incoming.weeklyGoals ?? incoming.weeklyTodos ?? [])
       .map((goal) => normalizeWeeklyGoal(goal, weekKey, now))
       .filter(Boolean),
+    monthlyGoals: (incoming.monthlyGoals ?? [])
+      .map((goal) => normalizeMonthlyGoal(goal, monthKey, now))
+      .filter(Boolean),
     dailyLogs: migrateLegacyDailyLogs(incoming, todayKey),
     moneyTargetPerDay: normalizeNonNegativeNumber(incoming.moneyTargetPerDay, base.moneyTargetPerDay),
+    bankBalance: normalizeNonNegativeNumber(incoming.bankBalance, base.bankBalance),
     momentumHistory: (incoming.momentumHistory ?? [])
       .map((entry) => normalizeMomentumSnapshot(entry, now))
       .filter(Boolean)
@@ -390,7 +465,7 @@ export function normalizeSystem(rawSystem, now = new Date()) {
     [todayKey]: normalizeDailyLog(system.dailyLogs[todayKey] ?? emptyDailyLog())
   }
 
-  return system
+  return pruneToCurrentWindows(system, now)
 }
 
 export function getEmptyDailyLog() {
@@ -399,4 +474,11 @@ export function getEmptyDailyLog() {
 
 export function getAcquiredHabits(habits) {
   return habits.filter((habit) => habit.streak >= 7)
+}
+
+export function getThemeAccentForDate(date = new Date()) {
+  const dayNumber = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS)
+  const accentIndex = ((dayNumber % THEME_ACCENT_CYCLE.length) + THEME_ACCENT_CYCLE.length) % THEME_ACCENT_CYCLE.length
+
+  return THEME_ACCENT_CYCLE[accentIndex]
 }

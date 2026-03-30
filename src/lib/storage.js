@@ -1,5 +1,5 @@
 import { createDefaultSystem, getDayKey, normalizeSystem } from "@/lib/systemLogic"
-import { calculateMomentum } from "@/lib/momentum"
+import { calculateMomentum, calculateTodayScore } from "@/lib/momentum"
 
 const STORAGE_KEY = "teeshaOS.v2"
 const LEGACY_STORAGE_KEYS = ["teeshaOS"]
@@ -51,6 +51,7 @@ function writeStoredSystem(system) {
   const snapshot = {
     dateKey: getDayKey(now),
     score: momentum,
+    todayScore: calculateTodayScore(normalized),
     recordedAt: now.toISOString()
   }
   const withMomentumHistory = {

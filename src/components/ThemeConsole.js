@@ -1,19 +1,9 @@
 "use client"
 
 import { useTeesha } from "@/context/TeeshaContext"
+import { getThemeAccentForDate, THEME_ACCENT_CYCLE } from "@/lib/systemLogic"
 
-const PRESETS = [
-  "#25e7ff",
-  "#59f3c1",
-  "#ff6ff1",
-  "#ffd25a",
-  "#7aa2ff",
-  "#ff8e63",
-  "#9cff57",
-  "#ff4d8d",
-  "#a77dff",
-  "#7df9ff"
-]
+const PRESETS = [...new Set([...THEME_ACCENT_CYCLE, "#59f3c1", "#7aa2ff", "#ff8e63", "#ff4d8d", "#a77dff"])]
 
 export default function ThemeConsole() {
   const { system, setSystem } = useTeesha()
@@ -23,24 +13,53 @@ export default function ThemeConsole() {
   function updateAccent(themeAccent) {
     setSystem((current) => ({
       ...current,
+      themeMode: "manual",
       themeAccent
     }))
   }
 
+  function setMode(themeMode) {
+    setSystem((current) => ({
+      ...current,
+      themeMode,
+      themeAccent: themeMode === "auto" ? getThemeAccentForDate() : current.themeAccent
+    }))
+  }
+
   return (
-    <section className="terminal-section">
-      <div className="section-heading">
+    <section className="terminal-card px-4 py-4">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="terminal-label">Theme Kernel</div>
-          <h3 className="data-title mt-2 text-xl text-white">Color Control</h3>
+          <div className="terminal-label">Accent Control</div>
+          <h3 className="data-title mt-2 text-base text-white">Daily theme switch</h3>
+        </div>
+        <div className="terminal-chip-muted px-3 py-1 text-[0.62rem]">
+          {system.themeMode === "auto" ? "AUTO DAILY" : "MANUAL"}
         </div>
       </div>
 
-      <div className="terminal-subtext mb-4 text-sm">
-        Pick one color and the whole interface retunes its borders, glow, and highlight channels automatically.
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => setMode("auto")}
+          className={`terminal-button-muted px-3 py-3 text-xs ${system.themeMode === "auto" ? "border-[rgba(var(--accent-rgb),0.55)] text-white" : ""}`}
+        >
+          Auto every day
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("manual")}
+          className={`terminal-button-muted px-3 py-3 text-xs ${system.themeMode === "manual" ? "border-[rgba(var(--accent-rgb),0.55)] text-white" : ""}`}
+        >
+          Manual pick
+        </button>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="terminal-subtext mt-3 text-sm">
+        One accent at a time across bars, borders, arrows, and highlights.
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3">
         {PRESETS.map((color) => (
           <button
             key={color}
@@ -56,7 +75,7 @@ export default function ThemeConsole() {
       <div className="mt-5 grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
         <input type="color" value={system.themeAccent} onChange={(event) => updateAccent(event.target.value)} className="theme-color-input" />
         <div className="terminal-subtext text-sm">
-          Custom accent. The app will auto-build the secondary hot color and the rest of the chrome from this.
+          Custom accent. Auto mode will pick the daily color on next open. Manual mode keeps your chosen accent.
         </div>
       </div>
     </section>

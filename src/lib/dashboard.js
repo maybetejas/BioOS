@@ -1,5 +1,5 @@
-import { calculateMomentumForDay } from "@/lib/momentum"
-import { getDayKey, getEmptyDailyLog, getWeekKey } from "@/lib/systemLogic"
+import { buildMomentumSeries } from "@/lib/momentum"
+import { getDayKey, getEmptyDailyLog, getMonthKey, getWeekKey } from "@/lib/systemLogic"
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
@@ -48,6 +48,10 @@ export function getTodayTasks(system, dayKey = getDayKey()) {
 
 export function getWeekGoals(system, weekKey = getWeekKey()) {
   return (system?.weeklyGoals ?? []).filter((goal) => goal.weekKey === weekKey)
+}
+
+export function getMonthGoals(system, monthKey = getMonthKey()) {
+  return (system?.monthlyGoals ?? []).filter((goal) => goal.monthKey === monthKey)
 }
 
 export function getCurrentFocus(schedule, now = new Date()) {
@@ -174,16 +178,8 @@ export function getRecentMoneyEntries(system, count = 7) {
 }
 
 export function getMomentumSeries(system) {
-  const dayKeys = new Set([
-    ...Object.keys(system?.dailyLogs ?? {}),
-    ...(system?.momentumHistory ?? []).map((entry) => entry.dateKey)
-  ])
-
-  return [...dayKeys]
-    .map((dayKey) => ({
-      dayKey,
-      date: formatDayLabel(dayKey),
-      score: calculateMomentumForDay(system, dayKey)
-    }))
-    .sort((left, right) => parseDayKey(left.dayKey) - parseDayKey(right.dayKey))
+  return buildMomentumSeries(system).map((entry) => ({
+    ...entry,
+    date: formatDayLabel(entry.dayKey)
+  }))
 }

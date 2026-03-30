@@ -2,21 +2,22 @@
 
 import { useRef, useState } from "react"
 import { useTeesha } from "@/context/TeeshaContext"
-import { getWeekGoals } from "@/lib/dashboard"
-import { getWeekKey } from "@/lib/systemLogic"
+import { getMonthGoals } from "@/lib/dashboard"
+import { getMonthKey } from "@/lib/systemLogic"
 import StatusCheckbox from "@/components/ui/StatusCheckbox"
 
-export default function WeeklyGoals() {
+export default function MonthlyGoals() {
   const { system, setSystem } = useTeesha()
   const [text, setText] = useState("")
   const holdTimerRef = useRef(null)
 
   if (!system) return null
 
-  const weekKey = getWeekKey()
-  const weeklyGoals = getWeekGoals(system, weekKey)
-  const completedCount = weeklyGoals.filter((goal) => goal.completed).length
-  const remainingCount = Math.max(0, weeklyGoals.length - completedCount)
+  const monthKey = getMonthKey()
+  const monthlyGoals = getMonthGoals(system, monthKey)
+  const completedCount = monthlyGoals.filter((goal) => goal.completed).length
+  const completion = monthlyGoals.length > 0 ? Math.round((completedCount / monthlyGoals.length) * 100) : 0
+  const remainingCount = Math.max(0, monthlyGoals.length - completedCount)
 
   function addGoal() {
     const cleanText = text.trim()
@@ -24,7 +25,7 @@ export default function WeeklyGoals() {
 
     setSystem((current) => ({
       ...current,
-      weeklyGoals: [...current.weeklyGoals, { id: Date.now(), text: cleanText, completed: false, weekKey, createdAt: new Date().toISOString() }]
+      monthlyGoals: [...current.monthlyGoals, { id: Date.now(), text: cleanText, completed: false, monthKey, createdAt: new Date().toISOString() }]
     }))
     setText("")
   }
@@ -32,14 +33,14 @@ export default function WeeklyGoals() {
   function toggleGoal(id) {
     setSystem((current) => ({
       ...current,
-      weeklyGoals: current.weeklyGoals.map((goal) => goal.id === id ? { ...goal, completed: !goal.completed } : goal)
+      monthlyGoals: current.monthlyGoals.map((goal) => goal.id === id ? { ...goal, completed: !goal.completed } : goal)
     }))
   }
 
   function removeGoal(id) {
     setSystem((current) => ({
       ...current,
-      weeklyGoals: current.weeklyGoals.filter((goal) => goal.id !== id)
+      monthlyGoals: current.monthlyGoals.filter((goal) => goal.id !== id)
     }))
   }
 
@@ -52,19 +53,17 @@ export default function WeeklyGoals() {
     window.clearTimeout(holdTimerRef.current)
   }
 
-  const completion = weeklyGoals.length > 0 ? Math.round((completedCount / weeklyGoals.length) * 100) : 0
-
   return (
     <section className="terminal-card px-4 py-4">
       <div className="section-heading mb-4">
         <div>
-          <div className="terminal-label">Weekly Plan</div>
-          <h3 className="data-title mt-2 text-base text-white">Priority outcomes</h3>
+          <div className="terminal-label">Monthly Goals</div>
+          <h3 className="data-title mt-2 text-base text-white">Longer horizon</h3>
         </div>
         <div className="text-right">
           <div className="neon-number text-2xl text-white">{completion}%</div>
-          <div className="terminal-subtext text-xs">{completedCount}/{weeklyGoals.length || 0}</div>
-          <div className="terminal-subtext mt-2 text-xs">{remainingCount} left this week</div>
+          <div className="terminal-subtext text-xs">{completedCount}/{monthlyGoals.length || 0}</div>
+          <div className="terminal-subtext mt-2 text-xs">{remainingCount} left this month</div>
         </div>
       </div>
 
@@ -73,7 +72,7 @@ export default function WeeklyGoals() {
       </div>
 
       <div className="space-y-2">
-        {weeklyGoals.map((goal) => (
+        {monthlyGoals.map((goal) => (
           <div
             key={goal.id}
             className="rounded-sm border border-white/8 bg-black/20 px-4 py-4"
@@ -103,12 +102,10 @@ export default function WeeklyGoals() {
             }
           }}
           className="terminal-input flex-1 px-3 py-3"
-          placeholder="Add weekly goal"
+          placeholder="Add monthly goal"
         />
         <button type="button" onClick={addGoal} className="terminal-button px-4 py-3 text-sm">+ Add</button>
       </div>
-
-      <div className="terminal-subtext mt-3 text-xs">Hold a weekly goal to delete it.</div>
     </section>
   )
 }

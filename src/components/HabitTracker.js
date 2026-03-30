@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTeesha } from "@/context/TeeshaContext"
 import { getDailyLog, updateDailyLog } from "@/lib/dashboard"
 import { getDayKey } from "@/lib/systemLogic"
@@ -9,12 +9,14 @@ import StatusCheckbox from "@/components/ui/StatusCheckbox"
 export default function HabitTracker() {
   const { system, setSystem } = useTeesha()
   const [name, setName] = useState("")
+  const holdTimerRef = useRef(null)
 
   if (!system) return null
 
   const todayKey = getDayKey()
   const todayLog = getDailyLog(system, todayKey)
   const completedSet = new Set(todayLog.habitsCompleted)
+  const remainingCount = Math.max(0, system.habits.length - completedSet.size)
 
   function addHabit() {
     const cleanName = name.trim()
@@ -64,28 +66,66 @@ export default function HabitTracker() {
     })
   }
 
+  function removeHabit(id, habitName) {
+    setSystem((current) => {
+      const currentLog = getDailyLog(current, todayKey)
+
+      return updateDailyLog({
+        ...current,
+        habits: current.habits.filter((habit) => habit.id !== id)
+      }, todayKey, (log) => ({
+        ...log,
+        habitsCompleted: (currentLog.habitsCompleted ?? []).filter((entry) => entry !== habitName)
+      }))
+    })
+  }
+
+  function startHoldDelete(id, habitName) {
+    window.clearTimeout(holdTimerRef.current)
+    holdTimerRef.current = window.setTimeout(() => removeHabit(id, habitName), 650)
+  }
+
+  function stopHoldDelete() {
+    window.clearTimeout(holdTimerRef.current)
+  }
+
   return (
-    <section className="terminal-section">
-      <div className="section-heading">
+    <section className="terminal-card px-4 py-4">
+      <div className="section-heading mb-4">
         <div>
-          <div className="terminal-label hot-text">Habit Telemetry</div>
-          <h3 className="data-title mt-2 text-xl text-white">Daily Reinforcement</h3>
+          <div className="terminal-label hot-text">Habits</div>
+          <h3 className="data-title mt-2 text-base text-white">Daily reinforcement</h3>
+        </div>
+        <div className="text-right">
+          <div className="terminal-chip-muted px-3 py-1 text-xs">{completedSet.size} / {system.habits.length || 0}</div>
+          <div className="terminal-subtext mt-2 text-xs">{remainingCount} left</div>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {system.habits.map((habit, index) => {
           const colorClass = index % 3 === 0 ? "money-secondary" : index % 3 === 1 ? "money-primary" : "ember-text"
-          const streakWidth = `${Math.min(100, habit.streak * 10)}%`
+          const streakWidth = `${Math.min(100, Math.round((habit.streak / 7) * 100))}%`
 
           return (
-            <div key={habit.id} className="terminal-card px-4 py-4">
+            <div
+              key={habit.id}
+              className="rounded-sm border border-white/8 bg-black/20 px-4 py-4"
+              onPointerDown={() => startHoldDelete(habit.id, habit.name)}
+              onPointerUp={stopHoldDelete}
+              onPointerLeave={stopHoldDelete}
+              onPointerCancel={stopHoldDelete}
+              onContextMenu={(event) => {
+                event.preventDefault()
+                removeHabit(habit.id, habit.name)
+              }}
+            >
               <div className="flex items-start gap-3">
                 <div className={`grid h-11 w-11 place-items-center border ${colorClass} text-lg font-bold`}>+</div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="text-xl font-semibold text-white">{habit.name}</div>
-                    <div className={`text-sm font-semibold uppercase ${colorClass}`}>Streak {habit.streak}d</div>
+                    <div className="text-lg font-semibold text-white">{habit.name}</div>
+                    <div className={`text-sm font-semibold uppercase ${colorClass}`}>{habit.streak}d</div>
                   </div>
                   <div className="thin-track mt-3">
                     <div className="thin-fill" style={{ width: streakWidth }} />
@@ -103,9 +143,21 @@ export default function HabitTracker() {
       </div>
 
       <div className="mt-4 flex gap-2">
-        <input value={name} onChange={(event) => setName(event.target.value)} className="terminal-input flex-1 px-3 py-3" placeholder="Add habit" />
-        <button type="button" onClick={addHabit} className="terminal-button px-4 py-3 text-sm">Add</button>
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              addHabit()
+            }
+          }}
+          className="terminal-input flex-1 px-3 py-3"
+          placeholder="Add habit"
+        />
+        <button type="button" onClick={addHabit} className="terminal-button px-4 py-3 text-sm">+ Add</button>
       </div>
+
+      <div className="terminal-subtext mt-3 text-xs">Hold a habit to delete it.</div>
     </section>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useSyncExternalStore } from "react"
-import { DEFAULT_THEME_ACCENT } from "@/lib/systemLogic"
+import { DEFAULT_THEME_ACCENT, getThemeAccentForDate, THEME_ACCENT_CYCLE } from "@/lib/systemLogic"
 import {
   getSystemSnapshot,
   refreshStoredSystem,
@@ -110,15 +110,15 @@ function hslToRgb({ hue, saturation, lightness }) {
 function buildThemePalette(hex) {
   const accentRgb = hexToRgb(hex)
   const accentHsl = rgbToHsl(accentRgb)
-  const hotRgb = hslToRgb({
-    hue: (accentHsl.hue + 120) % 360,
+  const brightRgb = hslToRgb({
+    hue: accentHsl.hue,
     saturation: Math.min(1, Math.max(0.58, accentHsl.saturation)),
-    lightness: Math.min(0.72, Math.max(0.56, accentHsl.lightness + 0.06))
+    lightness: Math.min(0.82, Math.max(0.64, accentHsl.lightness + 0.12))
   })
-  const emberRgb = hslToRgb({
-    hue: (accentHsl.hue + 45) % 360,
-    saturation: Math.min(1, Math.max(0.55, accentHsl.saturation)),
-    lightness: 0.58
+  const softRgb = hslToRgb({
+    hue: accentHsl.hue,
+    saturation: Math.min(1, Math.max(0.45, accentHsl.saturation - 0.05)),
+    lightness: Math.min(0.66, Math.max(0.5, accentHsl.lightness + 0.02))
   })
 
   return {
@@ -126,8 +126,8 @@ function buildThemePalette(hex) {
     accentDeepRgb: scaleRgb(accentRgb, 0.16),
     accentMidRgb: scaleRgb(accentRgb, 0.44),
     accentStrongRgb: mixRgb(accentRgb, { red: 255, green: 255, blue: 255 }, 0.28),
-    hotRgb: rgbToString(hotRgb),
-    emberRgb: rgbToString(emberRgb)
+    hotRgb: rgbToString(brightRgb),
+    emberRgb: rgbToString(softRgb)
   }
 }
 
@@ -168,6 +168,67 @@ export function TeeshaProvider({ children }) {
     document.documentElement.style.setProperty("--hot-rgb", palette.hotRgb)
     document.documentElement.style.setProperty("--ember-rgb", palette.emberRgb)
   }, [system])
+
+  useEffect(() => {
+    if (!system || system.themeMode !== "auto") {
+      return
+    }
+
+    const dailyAccent = getThemeAccentForDate()
+
+    if (system.themeAccent === dailyAccent) {
+      return
+    }
+
+    updateStoredSystem((current) => (
+      current?.themeMode === "auto"
+        ? { ...current, themeAccent: dailyAccent }
+        : current
+    ))
+  }, [system])
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
+      return
+    }
+
+    let lastSwapAt = 0
+
+    function handleMotion(event) {
+      const acceleration = event.accelerationIncludingGravity
+
+      if (!acceleration) {
+        return
+      }
+
+      const totalForce = Math.abs(acceleration.x || 0) + Math.abs(acceleration.y || 0) + Math.abs(acceleration.z || 0)
+      const now = Date.now()
+
+      if (totalForce < 42 || now - lastSwapAt < 1400) {
+        return
+      }
+
+      lastSwapAt = now
+
+      updateStoredSystem((current) => {
+        const currentAccent = current?.themeAccent ?? DEFAULT_THEME_ACCENT
+        const currentIndex = THEME_ACCENT_CYCLE.indexOf(currentAccent)
+        const nextAccent = THEME_ACCENT_CYCLE[(currentIndex + 1 + THEME_ACCENT_CYCLE.length) % THEME_ACCENT_CYCLE.length]
+
+        return {
+          ...current,
+          themeMode: "manual",
+          themeAccent: nextAccent
+        }
+      })
+    }
+
+    window.addEventListener("devicemotion", handleMotion)
+
+    return () => {
+      window.removeEventListener("devicemotion", handleMotion)
+    }
+  }, [])
 
   return (
     <TeeshaContext.Provider value={{ system, setSystem: updateStoredSystem }}>
