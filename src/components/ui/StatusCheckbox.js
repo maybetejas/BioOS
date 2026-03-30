@@ -19,7 +19,7 @@ export default function StatusCheckbox({
       <span className="terminal-checkbox" aria-hidden="true">
         <svg
           viewBox="0 0 16 16"
-          className={`h-3.5 w-3.5 transition-opacity ${checked ? "opacity-100" : "opacity-0"}`}
+          className={`h-3 w-3 transition-opacity sm:h-3.5 sm:w-3.5 ${checked ? "opacity-100" : "opacity-0"}`}
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >

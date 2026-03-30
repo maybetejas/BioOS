@@ -160,7 +160,7 @@ function BankBalanceCard({ balance, onSave }) {
   }
 
   return (
-    <section className="terminal-card px-5 py-5 text-center">
+    <section className="terminal-card px-4 py-4 text-center sm:px-5 sm:py-5">
       <div className="terminal-label">Bank Balance</div>
       {editing ? (
         <div className="mt-4 space-y-3">
@@ -173,17 +173,17 @@ function BankBalanceCard({ balance, onSave }) {
                 saveBalance()
               }
             }}
-            className="terminal-input w-full px-4 py-3 text-center text-3xl font-semibold"
+            className="terminal-input w-full px-3 py-2.5 text-center text-2xl font-semibold sm:px-4 sm:py-3 sm:text-3xl"
           />
           <div className="flex gap-2">
-            <button type="button" onClick={saveBalance} className="terminal-button flex-1 px-4 py-3 text-sm">Save</button>
-            <button type="button" onClick={() => setEditing(false)} className="terminal-button-muted flex-1 px-4 py-3 text-sm">Cancel</button>
+            <button type="button" onClick={saveBalance} className="terminal-button flex-1 px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">Save</button>
+            <button type="button" onClick={() => setEditing(false)} className="terminal-button-muted flex-1 px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">Cancel</button>
           </div>
         </div>
       ) : (
         <button type="button" onClick={() => setEditing(true)} className="mt-4 w-full">
-          <div className="neon-number text-[2.6rem] money-primary">{formatCurrency(balance)}</div>
-          <div className="terminal-subtext mt-2 text-sm">Current Balance</div>
+          <div className="neon-number money-primary text-[2rem] sm:text-[2.6rem]">{formatCurrency(balance)}</div>
+          <div className="terminal-subtext mt-2 text-xs sm:text-sm">Current Balance</div>
         </button>
       )}
     </section>
@@ -202,14 +202,14 @@ function CheckInTrendCard({ chartData, selectedMetric, onSelectMetric }) {
             key={field.key}
             type="button"
             onClick={() => onSelectMetric(field.key)}
-            className={`terminal-button-muted px-3 py-2 text-xs ${selectedMetric === field.key ? "border-[rgba(var(--accent-rgb),0.55)] text-white" : ""}`}
+            className={`terminal-button-muted px-2.5 py-2 text-[0.68rem] sm:px-3 sm:text-xs ${selectedMetric === field.key ? "border-[rgba(var(--accent-rgb),0.55)] text-white" : ""}`}
           >
             {field.label}
           </button>
         ))}
       </div>
 
-      <div className="h-40 w-full">
+      <div className="h-32 w-full sm:h-40">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
             <XAxis dataKey="date" stroke="var(--terminal-text-soft)" tickLine={false} axisLine={false} minTickGap={18} />
@@ -232,41 +232,41 @@ function CheckInTrendCard({ chartData, selectedMetric, onSelectMetric }) {
 
 function MainSystemCard({ progressItems, momentum, momentumSignal, momentumBars, onLogDay, onOpenMomentum, checkInChartData, selectedCheckInMetric, onSelectCheckInMetric }) {
   return (
-    <section className="terminal-section px-5 py-5">
-      <div className="space-y-6">
-        <div className="space-y-4">
+    <section className="terminal-section px-4 py-4 sm:px-5 sm:py-5">
+      <div className="space-y-5">
+        <div className="space-y-3">
           {progressItems.map((item) => (
             <div key={item.label}>
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div>
                   <div className="terminal-label text-[0.62rem] text-white/75">{item.label}</div>
-                  <div className="terminal-subtext mt-1 text-xs">{item.remainingLabel}</div>
+                  <div className="terminal-subtext mt-1 text-[0.72rem] sm:text-xs">{item.remainingLabel}</div>
                 </div>
-                <div className="text-sm font-semibold text-white">{item.percent}%</div>
+                <div className="text-xs font-semibold text-white sm:text-sm">{item.percent}%</div>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/10 sm:h-2">
                 <div className="h-full rounded-full bg-[linear-gradient(90deg,rgb(var(--accent-rgb)),rgba(var(--hot-rgb),0.9))]" style={{ width: `${item.percent}%` }} />
               </div>
             </div>
           ))}
         </div>
 
-        <button type="button" onClick={onOpenMomentum} className="grid w-full grid-cols-[auto_1fr] items-end gap-4 text-left">
+        <button type="button" onClick={onOpenMomentum} className="grid w-full grid-cols-[minmax(0,auto)_1fr] items-end gap-3 text-left sm:gap-4">
           <div>
             <div className="terminal-label">Momentum</div>
             <div className="mt-2 flex items-center gap-3">
-              <div className="neon-number text-[2.4rem] money-primary">{momentum}</div>
-              <div className={`text-sm font-semibold ${momentumSignal.className}`}>{momentumSignal.symbol}</div>
+              <div className="neon-number money-primary text-[1.9rem] sm:text-[2.4rem]">{momentum}</div>
+              <div className={`text-xs font-semibold sm:text-sm ${momentumSignal.className}`}>{momentumSignal.symbol}</div>
             </div>
           </div>
-          <div className="flex h-12 items-end gap-1.5">
+          <div className="flex h-10 items-end gap-1 sm:h-12 sm:gap-1.5">
             {momentumBars.map((bar) => (
               <div key={bar.id} className="flex-1 rounded-t-sm bg-[linear-gradient(180deg,rgba(var(--accent-rgb),0.28),rgba(var(--accent-rgb),0.88))]" style={{ height: `${bar.height}px` }} />
             ))}
           </div>
         </button>
 
-        <button type="button" onClick={onLogDay} className="terminal-button w-full px-4 py-3 text-sm">Log Day</button>
+        <button type="button" onClick={onLogDay} className="terminal-button w-full px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">Log Day</button>
 
         <CheckInTrendCard
           chartData={checkInChartData}
@@ -280,7 +280,7 @@ function MainSystemCard({ progressItems, momentum, momentumSignal, momentumBars,
 
 function MomentumChartCard({ data }) {
   return (
-    <div className="h-52 w-full">
+    <div className="h-40 w-full sm:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data.slice(-7)} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
             <XAxis dataKey="date" stroke="var(--terminal-text-soft)" tickLine={false} axisLine={false} minTickGap={18} />
@@ -321,10 +321,10 @@ function RussianWordModalContent({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <button type="button" onClick={() => onChangeOffset(wordOffset - 1)} className="terminal-button-muted px-3 py-2 text-xs">Prev Day</button>
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
+        <button type="button" onClick={() => onChangeOffset(wordOffset - 1)} className="terminal-button-muted px-2.5 py-2 text-[0.68rem] sm:px-3 sm:text-xs">Prev Day</button>
         <div className="terminal-chip-muted px-3 py-1 text-[0.62rem]">{formatWordDate(activeWord.date)}</div>
-        <button type="button" onClick={() => onChangeOffset(wordOffset + 1)} className="terminal-button-muted px-3 py-2 text-xs">Next Day</button>
+        <button type="button" onClick={() => onChangeOffset(wordOffset + 1)} className="terminal-button-muted px-2.5 py-2 text-[0.68rem] sm:px-3 sm:text-xs">Next Day</button>
       </div>
 
       <div>
@@ -344,19 +344,19 @@ function RussianWordModalContent({
       </div>
 
       <div>
-        <div className="data-title text-[1.6rem] text-white">{activeWord.word?.word}</div>
-        {activeWord.word?.phonetic ? <div className="terminal-subtext mt-2 text-sm">{activeWord.word.phonetic}</div> : null}
-        {meanings.length > 0 ? <div className="mt-3 text-lg text-white">{meanings.join(", ")}</div> : null}
-        {activeWord.word?.usage ? <div className="terminal-subtext mt-2 text-sm">{activeWord.word.usage}</div> : null}
+        <div className="data-title text-[1.3rem] text-white sm:text-[1.6rem]">{activeWord.word?.word}</div>
+        {activeWord.word?.phonetic ? <div className="terminal-subtext mt-2 text-xs sm:text-sm">{activeWord.word.phonetic}</div> : null}
+        {meanings.length > 0 ? <div className="mt-3 text-base text-white sm:text-lg">{meanings.join(", ")}</div> : null}
+        {activeWord.word?.usage ? <div className="terminal-subtext mt-2 text-xs sm:text-sm">{activeWord.word.usage}</div> : null}
       </div>
 
       {examples.length > 0 ? (
         <div className="space-y-2">
           <div className="terminal-label">Examples</div>
           {examples.slice(0, 2).map((example, index) => (
-            <div key={`${example.translation}-${index}`} className="rounded-sm border border-white/8 bg-black/20 px-3 py-3">
+            <div key={`${example.translation}-${index}`} className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
               <div className="text-sm text-white">{example.russian}</div>
-              <div className="terminal-subtext mt-1 text-sm">{example.translation}</div>
+              <div className="terminal-subtext mt-1 text-xs sm:text-sm">{example.translation}</div>
             </div>
           ))}
         </div>
@@ -366,7 +366,7 @@ function RussianWordModalContent({
         <div className="space-y-2">
           <div className="terminal-label">Responses</div>
           {responses.slice(0, 2).map((response, index) => (
-            <div key={`${response.meaning}-${index}`} className="rounded-sm border border-white/8 bg-black/20 px-3 py-3">
+            <div key={`${response.meaning}-${index}`} className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
               <div className="text-sm text-white">{response.russian}</div>
               <div className="terminal-subtext mt-1 text-sm">{response.meaning}{response.phonetic ? ` • ${response.phonetic}` : ""}</div>
             </div>
@@ -374,14 +374,14 @@ function RussianWordModalContent({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-sm border border-white/8 bg-black/20 px-3 py-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
           <div className="terminal-label">Difficulty</div>
-          <div className="mt-2 text-sm text-white capitalize">{activeWord.word?.difficulty ?? "Unknown"}</div>
+          <div className="mt-2 text-xs text-white capitalize sm:text-sm">{activeWord.word?.difficulty ?? "Unknown"}</div>
         </div>
-        <div className="rounded-sm border border-white/8 bg-black/20 px-3 py-3">
+        <div className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
           <div className="terminal-label">Category</div>
-          <div className="mt-2 text-sm text-white capitalize">{String(activeWord.word?.category ?? "general").replace(/_/g, " ")}</div>
+          <div className="mt-2 text-xs text-white capitalize sm:text-sm">{String(activeWord.word?.category ?? "general").replace(/_/g, " ")}</div>
         </div>
       </div>
 
@@ -390,13 +390,13 @@ function RussianWordModalContent({
           <div className="terminal-label">Seen History</div>
           <div className="terminal-subtext text-xs">Last {historyDays} days</div>
         </div>
-        <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+        <div className="max-h-44 space-y-2 overflow-y-auto pr-1 sm:max-h-48">
           {recentWords.map((entry) => (
             <button
               key={`${entry.date.toISOString()}-${entry.word?.id}`}
               type="button"
               onClick={() => onSelectWord(entry.date)}
-              className="w-full rounded-sm border border-white/8 bg-black/20 px-3 py-3 text-left"
+              className="w-full rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 text-left sm:py-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -417,9 +417,9 @@ function RussianWordModalContent({
           <div className="terminal-label">Phrase Bank</div>
           <div className="terminal-subtext text-xs">{phraseBank.length} words / phrases</div>
         </div>
-        <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+        <div className="max-h-56 space-y-2 overflow-y-auto pr-1 sm:max-h-64">
           {phraseBank.map((entry) => (
-            <div key={entry.id} className="rounded-sm border border-white/8 bg-black/20 px-3 py-3">
+            <div key={entry.id} className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-sm font-semibold text-white">{entry.word}</div>
@@ -428,7 +428,7 @@ function RussianWordModalContent({
                 <div className="terminal-subtext text-xs capitalize">{String(entry.category ?? "general").replace(/_/g, " ")}</div>
               </div>
               {Array.isArray(entry.meaning) && entry.meaning.length > 0 ? (
-                <div className="terminal-subtext mt-2 text-sm">{entry.meaning.join(", ")}</div>
+                <div className="terminal-subtext mt-2 text-xs sm:text-sm">{entry.meaning.join(", ")}</div>
               ) : null}
             </div>
           ))}
@@ -440,9 +440,9 @@ function RussianWordModalContent({
 
 function QuoteCard({ quote }) {
   return (
-    <section className="terminal-card px-5 py-5">
+    <section className="terminal-card px-4 py-4 sm:px-5 sm:py-5">
       <div className="terminal-label">Quote Of The Day</div>
-      <div className="mt-3 text-[1.02rem] leading-[1.45] text-white/92 italic sm:text-[1.08rem]">&quot;{quote.quote}&quot;</div>
+      <div className="mt-3 text-[0.9rem] leading-[1.5] text-white/92 italic sm:text-[1.08rem]">&quot;{quote.quote}&quot;</div>
     </section>
   )
 }
@@ -452,10 +452,10 @@ function RussianWordCard({ word, onOpen }) {
 
   return (
     <button type="button" onClick={onOpen} className="w-full text-left">
-      <section className="terminal-card px-5 py-5">
+      <section className="terminal-card px-4 py-4 sm:px-5 sm:py-5">
         <div className="terminal-label">Russian Word</div>
-        <div className="data-title mt-3 text-[1.55rem] text-white">{word?.word ?? "..."}</div>
-        <div className="terminal-subtext mt-2 text-sm uppercase">{meaning}</div>
+        <div className="data-title mt-3 text-[1.25rem] text-white sm:text-[1.55rem]">{word?.word ?? "..."}</div>
+        <div className="terminal-subtext mt-2 text-xs uppercase sm:text-sm">{meaning}</div>
       </section>
     </button>
   )
@@ -467,10 +467,10 @@ function GoalsSummaryCard({ label, percent, remainingLabel, onOpen }) {
       <section className="terminal-card px-4 py-4">
         <div className="terminal-label">{label}</div>
         <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="terminal-subtext text-sm">{remainingLabel}</div>
-          <div className="text-sm font-semibold text-white">{percent}%</div>
+          <div className="terminal-subtext text-xs sm:text-sm">{remainingLabel}</div>
+          <div className="text-xs font-semibold text-white sm:text-sm">{percent}%</div>
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10 sm:h-2">
           <div className="h-full rounded-full bg-[linear-gradient(90deg,rgb(var(--accent-rgb)),rgba(var(--hot-rgb),0.9))]" style={{ width: `${percent}%` }} />
         </div>
       </section>
@@ -482,11 +482,11 @@ function Modal({ open, title, children, onClose }) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-3 sm:items-center">
-      <div className="terminal-card terminal-modal w-full max-w-[420px] px-5 py-5">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-2.5 sm:p-3 sm:items-center">
+      <div className="terminal-card terminal-modal w-full max-w-[420px] px-4 py-4 sm:px-5 sm:py-5">
         <div className="section-heading mb-4">
           <h2 className="data-title text-base text-white">{title}</h2>
-          <button type="button" onClick={onClose} className="terminal-button-muted px-3 py-2 text-xs">Close</button>
+          <button type="button" onClick={onClose} className="terminal-button-muted px-2.5 py-2 text-[0.68rem] sm:px-3 sm:text-xs">Close</button>
         </div>
         {children}
       </div>
@@ -599,12 +599,12 @@ export default function Page() {
   }
 
   return (
-    <div className="mx-auto max-w-[430px] px-3 pb-8 pt-5 sm:max-w-[470px] sm:px-4 sm:py-6">
-      <div className="app-frame px-3 py-4 sm:px-4 sm:py-5">
-        <div className="app-content space-y-4">
+    <div className="mx-auto max-w-[390px] px-2.5 pb-5 pt-3 sm:max-w-[470px] sm:px-4 sm:py-6">
+      <div className="app-frame px-2.5 py-3 sm:px-4 sm:py-5">
+        <div className="app-content space-y-3 sm:space-y-4">
           <div className="px-1 pb-1">
             <div className="terminal-label">System</div>
-            <h1 className="data-title mt-2 text-[1.32rem] text-white">BioTracker</h1>
+            <h1 className="data-title mt-2 text-[1.12rem] text-white sm:text-[1.32rem]">BioTracker</h1>
           </div>
 
           <BankBalanceCard
@@ -646,11 +646,11 @@ export default function Page() {
                 type="number"
                 value={checkInDraft[field.key]}
                 onChange={(event) => setCheckInDraft((current) => ({ ...current, [field.key]: event.target.value }))}
-                className="terminal-input w-full px-3 py-3"
+                className="terminal-input w-full px-3 py-2.5 sm:py-3"
               />
             </label>
           ))}
-          <button type="button" onClick={saveCheckIn} className="terminal-button mt-2 w-full px-4 py-3 text-sm">Save</button>
+          <button type="button" onClick={saveCheckIn} className="terminal-button mt-2 w-full px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">Save</button>
         </div>
       </Modal>
 
@@ -674,9 +674,9 @@ export default function Page() {
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <div className="terminal-label">Overall Score</div>
-            <div className="mt-2 text-3xl font-semibold text-white">{momentum}</div>
+            <div className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{momentum}</div>
           </div>
-          <div className={`text-sm font-semibold ${momentumSignal.className}`}>{momentumSignal.symbol} {momentumSignal.label}</div>
+          <div className={`text-xs font-semibold sm:text-sm ${momentumSignal.className}`}>{momentumSignal.symbol} {momentumSignal.label}</div>
         </div>
         <MomentumChartCard data={momentumSeries} />
       </Modal>

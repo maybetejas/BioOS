@@ -58,14 +58,14 @@ export default function DailyTasks() {
   }
 
   return (
-    <section className="terminal-card px-4 py-4">
+    <section className="terminal-card px-3.5 py-3.5 sm:px-4 sm:py-4">
       <div className="section-heading mb-4">
         <div>
           <div className="terminal-label">Today&apos;s Tasks</div>
-          <h3 className="data-title mt-2 text-base text-white">Execution list</h3>
+          <h3 className="data-title mt-2 text-sm text-white sm:text-base">Execution list</h3>
         </div>
         <div className="text-right">
-          <div className="terminal-chip-muted px-3 py-1 text-xs">{completedCount} / {tasks.length || 0}</div>
+          <div className="terminal-chip-muted px-2.5 py-1 text-[0.68rem] sm:px-3 sm:text-xs">{completedCount} / {tasks.length || 0}</div>
           <div className="terminal-subtext mt-2 text-xs">{remainingCount} left</div>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function DailyTasks() {
         {tasks.map((task) => (
           <div
             key={task.id}
-            className="rounded-sm border border-white/8 bg-black/20 px-3 py-3"
+            className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3"
             onPointerDown={() => startHoldDelete(task.id)}
             onPointerUp={stopHoldDelete}
             onPointerLeave={stopHoldDelete}
@@ -84,7 +84,7 @@ export default function DailyTasks() {
               removeTask(task.id)
             }}
           >
-            <StatusCheckbox checked={task.completed} onChange={() => toggleTask(task.id)} textClassName="text-lg text-white">
+            <StatusCheckbox checked={task.completed} onChange={() => toggleTask(task.id)} textClassName="text-sm text-white sm:text-base">
               {task.text}
             </StatusCheckbox>
           </div>
@@ -100,10 +100,10 @@ export default function DailyTasks() {
               addTask()
             }
           }}
-          className="terminal-input flex-1 px-3 py-3"
+          className="terminal-input min-w-0 flex-1 px-3 py-2.5 sm:py-3"
           placeholder="Add task"
         />
-        <button type="button" onClick={addTask} className="terminal-button px-4 py-3 text-sm">+ Add</button>
+        <button type="button" onClick={addTask} className="terminal-button shrink-0 px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">+ Add</button>
       </div>
 
       <div className="terminal-subtext mt-3 text-xs">Hold a task to delete it.</div>

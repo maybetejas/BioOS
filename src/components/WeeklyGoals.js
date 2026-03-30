@@ -55,20 +55,20 @@ export default function WeeklyGoals() {
   const completion = weeklyGoals.length > 0 ? Math.round((completedCount / weeklyGoals.length) * 100) : 0
 
   return (
-    <section className="terminal-card px-4 py-4">
+    <section className="terminal-card px-3.5 py-3.5 sm:px-4 sm:py-4">
       <div className="section-heading mb-4">
         <div>
           <div className="terminal-label">Weekly Plan</div>
-          <h3 className="data-title mt-2 text-base text-white">Priority outcomes</h3>
+          <h3 className="data-title mt-2 text-sm text-white sm:text-base">Priority outcomes</h3>
         </div>
         <div className="text-right">
-          <div className="neon-number text-2xl text-white">{completion}%</div>
+          <div className="neon-number text-xl text-white sm:text-2xl">{completion}%</div>
           <div className="terminal-subtext text-xs">{completedCount}/{weeklyGoals.length || 0}</div>
           <div className="terminal-subtext mt-2 text-xs">{remainingCount} left this week</div>
         </div>
       </div>
 
-      <div className="thin-track mb-4">
+      <div className="thin-track mb-3.5 sm:mb-4">
         <div className="thin-fill" style={{ width: `${completion}%` }} />
       </div>
 
@@ -76,7 +76,7 @@ export default function WeeklyGoals() {
         {weeklyGoals.map((goal) => (
           <div
             key={goal.id}
-            className="rounded-sm border border-white/8 bg-black/20 px-4 py-4"
+            className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:px-4 sm:py-4"
             onPointerDown={() => startHoldDelete(goal.id)}
             onPointerUp={stopHoldDelete}
             onPointerLeave={stopHoldDelete}
@@ -86,7 +86,7 @@ export default function WeeklyGoals() {
               removeGoal(goal.id)
             }}
           >
-            <StatusCheckbox checked={goal.completed} onChange={() => toggleGoal(goal.id)} textClassName="text-lg text-white">
+            <StatusCheckbox checked={goal.completed} onChange={() => toggleGoal(goal.id)} textClassName="text-sm text-white sm:text-base">
               {goal.text}
             </StatusCheckbox>
           </div>
@@ -102,10 +102,10 @@ export default function WeeklyGoals() {
               addGoal()
             }
           }}
-          className="terminal-input flex-1 px-3 py-3"
+          className="terminal-input min-w-0 flex-1 px-3 py-2.5 sm:py-3"
           placeholder="Add weekly goal"
         />
-        <button type="button" onClick={addGoal} className="terminal-button px-4 py-3 text-sm">+ Add</button>
+        <button type="button" onClick={addGoal} className="terminal-button shrink-0 px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">+ Add</button>
       </div>
 
       <div className="terminal-subtext mt-3 text-xs">Hold a weekly goal to delete it.</div>

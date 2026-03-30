@@ -86,6 +86,13 @@ select {
   font: inherit;
 }
 
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
 .app-frame {
   position: relative;
   overflow: visible;
@@ -165,7 +172,7 @@ select {
 
 .terminal-button,
 .terminal-button-muted {
-  min-height: 2.8rem;
+  min-height: 2.45rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease, border-color 150ms ease;
@@ -219,14 +226,14 @@ select {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.7rem;
   cursor: pointer;
 }
 
 .terminal-checkbox {
   display: inline-flex;
-  height: 1.35rem;
-  width: 1.35rem;
+  height: 1.15rem;
+  width: 1.15rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -251,7 +258,7 @@ select {
   display: block;
   flex: 1;
   min-width: 0;
-  line-height: 1.35;
+  line-height: 1.3;
   word-break: break-word;
 }
 
@@ -298,7 +305,7 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.95rem;
+  margin-bottom: 0.75rem;
 }
 
 .section-heading h2,
@@ -396,7 +403,7 @@ select {
   gap: 0.85rem;
   border: 1px solid rgba(var(--accent-rgb), 0.12);
   background: rgba(0, 0, 0, 0.16);
-  padding: 0.9rem;
+  padding: 0.75rem;
 }
 
 .theme-swatch {
@@ -413,6 +420,7 @@ select {
 
 .terminal-modal {
   max-height: min(88vh, 920px);
+  overflow-y: auto;
 }
 
 .theme-color-input {
@@ -446,4 +454,74 @@ select {
 .data-title,
 .neon-number {
   font-family: var(--font-mono);
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
+  .app-frame {
+    border-radius: 1.1rem;
+  }
+
+  .terminal-section,
+  .terminal-card,
+  .terminal-modal {
+    border-radius: 1rem;
+  }
+
+  .terminal-mini,
+  .metric-tile,
+  .list-row {
+    border-radius: 0.8rem;
+  }
+
+  .terminal-label {
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .data-title {
+    letter-spacing: 0.08em;
+  }
+
+  .terminal-button,
+  .terminal-button-muted {
+    min-height: 2.3rem;
+    letter-spacing: 0.1em;
+  }
+
+  .terminal-chip,
+  .terminal-chip-muted {
+    font-size: 0.72rem;
+  }
+
+  .terminal-input,
+  .terminal-select {
+    font-size: 0.95rem;
+  }
+
+  .terminal-checkbox-label {
+    gap: 0.6rem;
+  }
+
+  .terminal-checkbox {
+    height: 1.05rem;
+    width: 1.05rem;
+  }
+
+  .neon-number {
+    line-height: 1;
+  }
+
+  .recharts-cartesian-axis-tick-value {
+    font-size: 0.72rem;
+  }
 }
