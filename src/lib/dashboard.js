@@ -46,6 +46,89 @@ export function getTodayTasks(system, dayKey = getDayKey()) {
   return (system?.tasks ?? []).filter((task) => task.date === dayKey)
 }
 
+export function getTaskStats(tasks = []) {
+  const total = tasks.length
+  const completed = tasks.filter((task) => task.completed).length
+
+  return {
+    total,
+    completed,
+    progress: total > 0 ? completed / total : 0
+  }
+}
+
+export function getTimedTaskCompletionStats(tasks = []) {
+  const total = tasks.length
+  const completedOnTime = tasks.filter((task) => {
+    if (!task?.completed) return false
+    if (!task?.dueTime) return true
+
+    const [dueHours, dueMinutes] = String(task.dueTime).split(":").map(Number)
+    if (!Number.isFinite(dueHours) || !Number.isFinite(dueMinutes)) return true
+
+    // Backward compatibility for tasks created before completedAt existed.
+    if (!task.completedAt) {
+      return task.completedOnTime !== false
+    }
+
+    const completedAt = new Date(task.completedAt)
+    if (Number.isNaN(completedAt.getTime())) return false
+
+    const completedMinutes = (completedAt.getHours() * 60) + completedAt.getMinutes()
+    const deadlineMinutes = (dueHours * 60) + dueMinutes
+
+    return completedMinutes <= deadlineMinutes
+  }).length
+  const completedLate = tasks.filter((task) => task?.completed && !task?.completedOnTime).length
+
+  return {
+    total,
+    completedOnTime,
+    completedLate,
+    progress: total > 0 ? completedOnTime / total : 0
+  }
+}
+
+export function getTaskDueMinutes(task) {
+  if (!task?.dueTime) return null
+  const [hours, minutes] = String(task.dueTime).split(":").map(Number)
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null
+  return (hours * 60) + minutes
+}
+
+export function getTaskDeadlineState(task, now = new Date()) {
+  const dueMinutes = getTaskDueMinutes(task)
+
+  if (dueMinutes === null) {
+    return {
+      dueMinutes: null,
+      progress: 0,
+      overdue: false,
+      remainingMinutes: null
+    }
+  }
+
+  const currentMinutes = (now.getHours() * 60) + now.getMinutes()
+
+  return {
+    dueMinutes,
+    progress: clamp(currentMinutes / Math.max(1, dueMinutes), 0, 1),
+    overdue: currentMinutes > dueMinutes,
+    remainingMinutes: dueMinutes - currentMinutes
+  }
+}
+
+export function getHabitCompletionStats(system, dayKey = getDayKey()) {
+  const total = system?.habits?.length ?? 0
+  const completed = (getDailyLog(system, dayKey).habitsCompleted ?? []).length
+
+  return {
+    total,
+    completed,
+    progress: total > 0 ? completed / total : 0
+  }
+}
+
 export function getWeekGoals(system, weekKey = getWeekKey()) {
   return (system?.weeklyGoals ?? []).filter((goal) => goal.weekKey === weekKey)
 }
@@ -182,4 +265,12 @@ export function getMomentumSeries(system) {
     ...entry,
     date: formatDayLabel(entry.dayKey)
   }))
+}
+
+export function getDailyCompletionPercent(system, dayKey = getDayKey()) {
+  const tasks = getTodayTasks(system, dayKey)
+
+  if (tasks.length === 0) return 0
+
+  return Math.round((getTimedTaskCompletionStats(tasks).completedOnTime / tasks.length) * 100)
 }

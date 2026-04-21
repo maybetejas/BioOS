@@ -37,11 +37,11 @@ function buildHeartbeatPath(amplitude) {
   return segments.join(" ")
 }
 
-export default function HeartbeatSignal({ momentum }) {
-  const safeMomentum = clamp(Number(momentum) || 0, 0, 100)
-  const amplitude = 6 + ((safeMomentum / 100) * 14)
-  const glowOpacity = 0.16 + ((safeMomentum / 100) * 0.34)
-  const pulseDuration = `${clamp(1.8 - (safeMomentum / 1000), 1.15, 1.8)}s`
+export default function HeartbeatSignal({ completion }) {
+  const safeMomentum = clamp(Number(completion) || 0, 0, 100)
+  const amplitude = 7 + ((safeMomentum / 100) * 18)
+  const glowOpacity = 0.18 + ((safeMomentum / 100) * 0.42)
+  const pulseDuration = `${clamp(1.42 - (safeMomentum / 92), 0.36, 1.42)}s`
   const path = buildHeartbeatPath(amplitude)
 
   return (
@@ -49,7 +49,7 @@ export default function HeartbeatSignal({ momentum }) {
       <div className="mb-1 flex items-center justify-between">
         <span className="terminal-label">Heartbeat</span>
         <span className="terminal-subtext text-xs">
-          {safeMomentum >= 75 ? "Strong signal" : safeMomentum >= 45 ? "Stable signal" : "Weak signal"}
+          {safeMomentum >= 80 ? "Racing signal" : safeMomentum >= 55 ? "Strong signal" : safeMomentum >= 30 ? "Stable signal" : "Weak signal"}
         </span>
       </div>
 
@@ -67,7 +67,7 @@ export default function HeartbeatSignal({ momentum }) {
             d={path}
             className="heartbeat-path"
             style={{
-              animationDuration: pulseDuration,
+              animation: `heartbeatBeat ${pulseDuration} ease-in-out infinite, heartbeatTrace ${pulseDuration} linear infinite`,
               filter: `drop-shadow(0 0 8px rgba(var(--accent-rgb), ${glowOpacity}))`
             }}
           />

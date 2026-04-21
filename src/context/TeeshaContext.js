@@ -213,7 +213,13 @@ export function TeeshaProvider({ children }) {
       updateStoredSystem((current) => {
         const currentAccent = current?.themeAccent ?? DEFAULT_THEME_ACCENT
         const currentIndex = THEME_ACCENT_CYCLE.indexOf(currentAccent)
-        const nextAccent = THEME_ACCENT_CYCLE[(currentIndex + 1 + THEME_ACCENT_CYCLE.length) % THEME_ACCENT_CYCLE.length]
+        const jump = Math.max(1, Math.min(THEME_ACCENT_CYCLE.length - 1, Math.floor((totalForce / 8) % THEME_ACCENT_CYCLE.length)))
+        const fallbackIndex = Math.floor(Math.random() * THEME_ACCENT_CYCLE.length)
+        const nextAccent = THEME_ACCENT_CYCLE[
+          currentIndex >= 0
+            ? (currentIndex + jump) % THEME_ACCENT_CYCLE.length
+            : fallbackIndex
+        ]
 
         return {
           ...current,

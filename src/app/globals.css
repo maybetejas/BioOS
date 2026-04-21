@@ -75,6 +75,14 @@ body::after {
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02), transparent 35%);
 }
 
+body.happy-flash::after {
+  animation: happyGlow 1000ms ease-out;
+}
+
+body.happy-flash .app-frame {
+  animation: quickCelebrate 700ms ease-out;
+}
+
 ::selection {
   background: rgba(var(--accent-rgb), 0.28);
   color: #fff8e4;
@@ -268,6 +276,69 @@ textarea {
   text-decoration-color: rgba(var(--accent-rgb), 0.36);
 }
 
+.app-celebration .app-frame {
+  animation: appPulse 1.3s ease-in-out infinite;
+}
+
+.app-strobe .app-frame {
+  animation: appPulse 1.2s ease-in-out infinite, appStrobe 320ms steps(2, end) infinite;
+}
+
+.event-burst .app-frame {
+  animation: quickCelebrate 900ms ease-out;
+}
+
+.heartbeat-shell {
+  border: 1px solid rgba(var(--accent-rgb), 0.22);
+  background: linear-gradient(180deg, rgba(7, 13, 18, 0.95), rgba(8, 14, 21, 0.92));
+  padding: 0.75rem;
+}
+
+.heartbeat-track {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.25)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(var(--accent-rgb), 0.05) 0px,
+      rgba(var(--accent-rgb), 0.05) 1px,
+      transparent 1px,
+      transparent 20px
+    );
+}
+
+.heartbeat-scan {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.18), transparent);
+  animation: heartbeatSweep 2.4s linear infinite;
+  pointer-events: none;
+}
+
+.heartbeat-svg {
+  display: block;
+  width: 100%;
+  height: 64px;
+}
+
+.heartbeat-baseline {
+  stroke: rgba(var(--accent-rgb), 0.22);
+  stroke-width: 1.2;
+}
+
+.heartbeat-path {
+  fill: none;
+  stroke: rgba(var(--accent-strong-rgb), 0.96);
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation-name: heartbeatBeat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
 .terminal-error {
   color: var(--terminal-danger);
 }
@@ -429,6 +500,93 @@ textarea {
   border: 1px solid rgba(var(--accent-rgb), 0.38);
   background: transparent;
   padding: 0.2rem;
+}
+
+@keyframes appPulse {
+  0%, 100% {
+    box-shadow: var(--panel-glow);
+    filter: saturate(1);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.28), 0 0 40px rgba(var(--accent-rgb), 0.28), 0 0 75px rgba(var(--accent-rgb), 0.12);
+    filter: saturate(1.2) brightness(1.08);
+  }
+}
+
+@keyframes happyGlow {
+  0% { opacity: 0.18; transform: scale(1); }
+  35% { opacity: 0.75; transform: scale(1.014); }
+  70% { opacity: 0.52; transform: scale(1.007); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
+@keyframes heartbeatSweep {
+  0% { transform: translateX(-100%); opacity: 0.15; }
+  48% { opacity: 0.55; }
+  100% { transform: translateX(100%); opacity: 0.12; }
+}
+
+@keyframes heartbeatBeat {
+  0%, 100% {
+    opacity: 0.84;
+    transform: translateY(0);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(-0.4px);
+  }
+  50% {
+    opacity: 0.92;
+    transform: translateY(0.45px);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(-0.3px);
+  }
+}
+
+@keyframes heartbeatTrace {
+  0% {
+    stroke-dasharray: 12 6;
+    stroke-dashoffset: 18;
+  }
+  100% {
+    stroke-dasharray: 12 6;
+    stroke-dashoffset: -18;
+  }
+}
+
+@keyframes quickCelebrate {
+  0% {
+    transform: scale(1);
+    box-shadow: var(--panel-glow);
+  }
+  50% {
+    transform: scale(1.008);
+    box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.34), 0 0 56px rgba(var(--accent-rgb), 0.32);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: var(--panel-glow);
+  }
+}
+
+@keyframes appStrobe {
+  0% {
+    filter: hue-rotate(0deg) saturate(1.1);
+  }
+  25% {
+    filter: hue-rotate(70deg) saturate(1.35);
+  }
+  50% {
+    filter: hue-rotate(145deg) saturate(1.45);
+  }
+  75% {
+    filter: hue-rotate(230deg) saturate(1.3);
+  }
+  100% {
+    filter: hue-rotate(310deg) saturate(1.15);
+  }
 }
 
 .app-frame,

@@ -5,7 +5,22 @@ export const THEME_ACCENT_CYCLE = [
   "#25e7ff",
   "#7dff5d",
   "#ff5c7c",
-  "#ffd166"
+  "#ffd166",
+  "#7c5cff",
+  "#35f2a6",
+  "#ff8c42",
+  "#00c2ff",
+  "#ff4fd8",
+  "#9eff6d",
+  "#ff6b6b",
+  "#6de7ff",
+  "#a56dff",
+  "#f7c95c",
+  "#4dffb8",
+  "#ff9f1c",
+  "#00ffa8",
+  "#ff7ad9",
+  "#63b3ff"
 ]
 
 export const DEFAULT_SCHEDULE = [
@@ -171,6 +186,7 @@ function normalizeMainGoal(mainGoal) {
 
 function normalizeTask(task, fallbackDayKey, now) {
   const text = normalizeText(task?.text)
+  const dueTime = normalizeText(task?.dueTime)
 
   if (!text) return null
 
@@ -179,7 +195,8 @@ function normalizeTask(task, fallbackDayKey, now) {
     text,
     completed: Boolean(task?.completed),
     date: normalizeDayKey(task?.date ?? task?.periodKey, fallbackDayKey),
-    createdAt: normalizeDateString(task?.createdAt) ?? new Date(now).toISOString()
+    createdAt: normalizeDateString(task?.createdAt) ?? new Date(now).toISOString(),
+    dueTime: /^(\d{1,2}):(\d{2})$/.test(dueTime) ? dueTime : ""
   }
 }
 

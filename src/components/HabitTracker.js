@@ -6,7 +6,7 @@ import { getDailyLog, updateDailyLog } from "@/lib/dashboard"
 import { getDayKey } from "@/lib/systemLogic"
 import StatusCheckbox from "@/components/ui/StatusCheckbox"
 
-export default function HabitTracker() {
+export default function HabitTracker({ onPositiveTick }) {
   const { system, setSystem } = useTeesha()
   const [name, setName] = useState("")
   const holdTimerRef = useRef(null)
@@ -17,6 +17,7 @@ export default function HabitTracker() {
   const todayLog = getDailyLog(system, todayKey)
   const completedSet = new Set(todayLog.habitsCompleted)
   const remainingCount = Math.max(0, system.habits.length - completedSet.size)
+  const progress = system.habits.length > 0 ? completedSet.size / system.habits.length : 0
 
   function addHabit() {
     const cleanName = name.trim()
@@ -30,6 +31,8 @@ export default function HabitTracker() {
   }
 
   function toggleHabit(habitName) {
+    const wasCompleted = completedSet.has(habitName)
+
     setSystem((current) => {
       const currentLog = getDailyLog(current, todayKey)
       const currentCompleted = currentLog.habitsCompleted ?? []
@@ -64,6 +67,19 @@ export default function HabitTracker() {
         habitsCompleted: nextCompleted
       }))
     })
+
+    if (!wasCompleted) {
+      const nextCompletedCount = completedSet.size + 1
+      const allDone = system.habits.length > 0 && nextCompletedCount >= system.habits.length
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate([18, 28, 18])
+      }
+      document.body.classList.remove("happy-flash")
+      void document.body.offsetWidth
+      document.body.classList.add("happy-flash")
+      window.setTimeout(() => document.body.classList.remove("happy-flash"), 900)
+      onPositiveTick?.({ allDone })
+    }
   }
 
   function removeHabit(id, habitName) {
@@ -99,6 +115,16 @@ export default function HabitTracker() {
         <div className="text-right">
           <div className="terminal-chip-muted px-2.5 py-1 text-[0.68rem] sm:px-3 sm:text-xs">{completedSet.size} / {system.habits.length || 0}</div>
           <div className="terminal-subtext mt-2 text-xs">{remainingCount} left</div>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.18em] text-white/70">
+          <span>Habit progress</span>
+          <span>{completedSet.size} / {system.habits.length || 0}</span>
+        </div>
+        <div className="progress-track mt-2 h-2">
+          <div className="progress-fill" style={{ width: `${Math.round(progress * 100)}%` }} />
         </div>
       </div>
 
