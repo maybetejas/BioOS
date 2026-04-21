@@ -1,147 +1,57 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Bar, BarChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { useTeesha } from "@/context/TeeshaContext"
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import DailyTasks from "@/components/DailyTasks"
-import HabitTracker from "@/components/HabitTracker"
-import MonthlyGoals from "@/components/MonthlyGoals"
-import WeeklyGoals from "@/components/WeeklyGoals"
-import {
-  formatCurrency,
-  getDailyLog,
-  getMoneySeries,
-  getMomentumSeries,
-  getMonthGoals,
-  getTodayTasks,
-  getWeekGoals,
-  updateDailyLog
-} from "@/lib/dashboard"
-import { calculateMomentum } from "@/lib/momentum"
+import { useTeesha } from "@/context/TeeshaContext"
+import { formatCurrency, getDailyLog, getTodayTasks, updateDailyLog } from "@/lib/dashboard"
+import { getDayKey, getWeekStart } from "@/lib/systemLogic"
 import { getQuoteOfTheDay } from "@/lib/quotes"
-import { getRussianWordByOffset, getRussianWordOfTheDay, RUSSIAN_WORDS } from "@/lib/russianWords"
-import { getDayKey, getMonthKey, getWeekKey } from "@/lib/systemLogic"
+import { getRussianWordByOffset, getRussianWordOfTheDay } from "@/lib/russianWords"
 
-const CHECKIN_FIELDS = [
-  { key: "sleep", label: "Sleep", suffix: "h" },
-  { key: "energy", label: "Energy" },
-  { key: "mood", label: "Mood" },
-  { key: "focus", label: "Focus" },
-  { key: "stress", label: "Stress" }
-]
-
-function clampPercent(value) {
-  return Math.max(0, Math.min(100, Math.round(value)))
+function formatWordDate(date) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric"
+  }).format(date)
 }
 
-function average(values) {
-  if (values.length === 0) return 0
-  return values.reduce((sum, value) => sum + value, 0) / values.length
+function getRecentRussianWords(days = 7) {
+  return Array.from({ length: days }, (_, index) => getRussianWordByOffset(-index)).filter((entry) => entry.word)
 }
 
-function getRecentDayKeys(system, count = 7) {
-  return Object.keys(system?.dailyLogs ?? {}).sort().slice(-count)
-}
+function getSleepSeries(system, days = 7) {
+  const start = getWeekStart()
 
-function getRollingTaskPercent(system, todayKey) {
-  const todayTasks = getTodayTasks(system, todayKey)
-
-  if (todayTasks.length > 0) {
-    const done = todayTasks.filter((task) => task.completed).length
-    return clampPercent((done / todayTasks.length) * 100)
-  }
-
-  const recentDayKeys = getRecentDayKeys(system)
-  const samples = recentDayKeys
-    .map((dayKey) => {
-      const tasks = getTodayTasks(system, dayKey)
-
-      if (tasks.length === 0) {
-        return null
-      }
-
-      return tasks.filter((task) => task.completed).length / tasks.length
-    })
-    .filter((value) => value !== null)
-
-  return clampPercent(average(samples) * 100)
-}
-
-function getRollingHabitPercent(system, todayLog) {
-  if ((system.habits?.length ?? 0) > 0) {
-    const completedHabits = todayLog.habitsCompleted.length
-
-    if (completedHabits > 0) {
-      return clampPercent((completedHabits / system.habits.length) * 100)
-    }
-  }
-
-  const recentDayKeys = getRecentDayKeys(system)
-  const samples = recentDayKeys
-    .map((dayKey) => {
-      const log = getDailyLog(system, dayKey)
-
-      if ((system.habits?.length ?? 0) === 0) {
-        return null
-      }
-
-      return (log.habitsCompleted.length || 0) / system.habits.length
-    })
-    .filter((value) => value !== null)
-
-  return clampPercent(average(samples) * 100)
-}
-
-function getProgressPercent(items) {
-  if (items.length === 0) {
-    return 0
-  }
-
-  return clampPercent((items.filter((item) => item.completed).length / items.length) * 100)
-}
-
-function getTrendSignal(delta, value = 0) {
-  if (delta > 0 || (value > 80 && delta >= 0)) {
-    return { symbol: "▲", label: "Rising", className: "text-emerald-300" }
-  }
-
-  if (delta < 0) {
-    return { symbol: "▼", label: "Falling", className: "text-rose-300" }
-  }
-
-  return { symbol: "●", label: "Stable", className: "text-white/60" }
-}
-
-function getSparkValues(values, count) {
-  const recent = values.slice(-count)
-
-  if (recent.length === 0) {
-    return Array.from({ length: count }, (_, index) => ({
-      id: `empty-${index}`,
-      height: 14
-    }))
-  }
-
-  const maxValue = Math.max(...recent.map((value) => Number(value) || 0), 1)
-
-  return recent.map((value, index) => ({
-    id: `${index}-${value}`,
-    height: 14 + Math.round(((Number(value) || 0) / maxValue) * 34)
-  }))
-}
-
-function getCheckInChartData(system, count = 7) {
-  return getRecentDayKeys(system, count).map((dayKey) => {
-    const log = getDailyLog(system, dayKey)
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(start)
+    date.setDate(date.getDate() + index)
+    const dayKey = date.toISOString().slice(0, 10)
+    const sleep = Number(getDailyLog(system, dayKey).checkIn?.sleep) || 0
 
     return {
       dayKey,
       date: dayKey.slice(5),
-      sleep: Number(log.checkIn?.sleep) || 0,
-      energy: Number(log.checkIn?.energy) || 0,
-      mood: Number(log.checkIn?.mood) || 0,
-      focus: Number(log.checkIn?.focus) || 0,
-      stress: Number(log.checkIn?.stress) || 0
+      value: sleep
+    }
+  })
+}
+
+function getTaskPercentSeries(system, days = 7) {
+  const start = getWeekStart()
+
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(start)
+    date.setDate(date.getDate() + index)
+    const dayKey = date.toISOString().slice(0, 10)
+    const tasks = getTodayTasks(system, dayKey)
+    const completed = tasks.filter((task) => task.completed).length
+    const percent = tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0
+
+    return {
+      dayKey,
+      date: dayKey.slice(5),
+      value: percent
     }
   })
 }
@@ -160,8 +70,8 @@ function BankBalanceCard({ balance, onSave }) {
   }
 
   return (
-    <section className="terminal-card px-4 py-4 text-center sm:px-5 sm:py-5">
-      <div className="terminal-label">Bank Balance</div>
+    <section className="terminal-card border border-cyan-400/20 bg-[linear-gradient(135deg,rgba(5,19,35,0.95),rgba(13,24,44,0.92))] px-4 py-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_18px_60px_rgba(0,0,0,0.35)] sm:px-5 sm:py-5">
+      <div className="terminal-label text-cyan-200">Bank Balance</div>
       {editing ? (
         <div className="mt-4 space-y-3">
           <input
@@ -173,7 +83,7 @@ function BankBalanceCard({ balance, onSave }) {
                 saveBalance()
               }
             }}
-            className="terminal-input w-full px-3 py-2.5 text-center text-2xl font-semibold sm:px-4 sm:py-3 sm:text-3xl"
+            className="terminal-input w-full border-cyan-400/30 bg-cyan-950/30 px-3 py-2.5 text-center text-2xl font-semibold text-cyan-100 sm:px-4 sm:py-3 sm:text-3xl"
           />
           <div className="flex gap-2">
             <button type="button" onClick={saveBalance} className="terminal-button flex-1 px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">Save</button>
@@ -182,267 +92,19 @@ function BankBalanceCard({ balance, onSave }) {
         </div>
       ) : (
         <button type="button" onClick={() => setEditing(true)} className="mt-4 w-full">
-          <div className="neon-number money-primary text-[2rem] sm:text-[2.6rem]">{formatCurrency(balance)}</div>
-          <div className="terminal-subtext mt-2 text-xs sm:text-sm">Current Balance</div>
+          <div className="neon-number money-primary text-[2rem] text-cyan-100 sm:text-[2.6rem]">{formatCurrency(balance)}</div>
+          <div className="terminal-subtext mt-2 text-xs text-cyan-100/70 sm:text-sm">Current Balance</div>
         </button>
       )}
     </section>
   )
 }
 
-function CheckInTrendCard({ chartData, selectedMetric, onSelectMetric }) {
-  const selectedField = CHECKIN_FIELDS.find((field) => field.key === selectedMetric) ?? CHECKIN_FIELDS[0]
-  const maxValue = selectedField.key === "sleep" ? 12 : 10
-
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {CHECKIN_FIELDS.map((field) => (
-          <button
-            key={field.key}
-            type="button"
-            onClick={() => onSelectMetric(field.key)}
-            className={`terminal-button-muted px-2.5 py-2 text-[0.68rem] sm:px-3 sm:text-xs ${selectedMetric === field.key ? "border-[rgba(var(--accent-rgb),0.55)] text-white" : ""}`}
-          >
-            {field.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="h-32 w-full sm:h-40">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
-            <XAxis dataKey="date" stroke="var(--terminal-text-soft)" tickLine={false} axisLine={false} minTickGap={18} />
-            <YAxis stroke="var(--terminal-text-soft)" tickLine={false} axisLine={false} domain={[0, maxValue]} />
-            <Tooltip
-              formatter={(value) => [`${value}${selectedField.suffix ?? ""}`, selectedField.label]}
-              contentStyle={{
-                background: "rgba(9, 12, 17, 0.96)",
-                border: "1px solid rgba(var(--accent-rgb), 0.2)",
-                color: "#fff"
-              }}
-            />
-            <Line type="monotone" dataKey={selectedMetric} stroke="rgb(var(--accent-rgb))" strokeWidth={2.5} dot={{ r: 2 }} activeDot={{ r: 4 }} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  )
-}
-
-function MainSystemCard({ progressItems, momentum, momentumSignal, momentumBars, onLogDay, onOpenMomentum, checkInChartData, selectedCheckInMetric, onSelectCheckInMetric }) {
-  return (
-    <section className="terminal-section px-4 py-4 sm:px-5 sm:py-5">
-      <div className="space-y-5">
-        <div className="space-y-3">
-          {progressItems.map((item) => (
-            <div key={item.label}>
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <div>
-                  <div className="terminal-label text-[0.62rem] text-white/75">{item.label}</div>
-                  <div className="terminal-subtext mt-1 text-[0.72rem] sm:text-xs">{item.remainingLabel}</div>
-                </div>
-                <div className="text-xs font-semibold text-white sm:text-sm">{item.percent}%</div>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-white/10 sm:h-2">
-                <div className="h-full rounded-full bg-[linear-gradient(90deg,rgb(var(--accent-rgb)),rgba(var(--hot-rgb),0.9))]" style={{ width: `${item.percent}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button type="button" onClick={onOpenMomentum} className="grid w-full grid-cols-[minmax(0,auto)_1fr] items-end gap-3 text-left sm:gap-4">
-          <div>
-            <div className="terminal-label">Momentum</div>
-            <div className="mt-2 flex items-center gap-3">
-              <div className="neon-number money-primary text-[1.9rem] sm:text-[2.4rem]">{momentum}</div>
-              <div className={`text-xs font-semibold sm:text-sm ${momentumSignal.className}`}>{momentumSignal.symbol}</div>
-            </div>
-          </div>
-          <div className="flex h-10 items-end gap-1 sm:h-12 sm:gap-1.5">
-            {momentumBars.map((bar) => (
-              <div key={bar.id} className="flex-1 rounded-t-sm bg-[linear-gradient(180deg,rgba(var(--accent-rgb),0.28),rgba(var(--accent-rgb),0.88))]" style={{ height: `${bar.height}px` }} />
-            ))}
-          </div>
-        </button>
-
-        <button type="button" onClick={onLogDay} className="terminal-button w-full px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">Log Day</button>
-
-        <CheckInTrendCard
-          chartData={checkInChartData}
-          selectedMetric={selectedCheckInMetric}
-          onSelectMetric={onSelectCheckInMetric}
-        />
-      </div>
-    </section>
-  )
-}
-
-function MomentumChartCard({ data }) {
-  return (
-    <div className="h-40 w-full sm:h-52">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data.slice(-7)} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
-            <XAxis dataKey="date" stroke="var(--terminal-text-soft)" tickLine={false} axisLine={false} minTickGap={18} />
-            <YAxis stroke="var(--terminal-text-soft)" tickLine={false} axisLine={false} domain={[0, 100]} />
-            <Tooltip
-              contentStyle={{
-                background: "rgba(9, 12, 17, 0.96)",
-                border: "1px solid rgba(var(--accent-rgb), 0.2)",
-                color: "#fff"
-              }}
-            />
-            <Bar dataKey="score" fill="rgb(var(--accent-rgb))" radius={[3, 3, 0, 0]} name="Momentum" />
-          </BarChart>
-        </ResponsiveContainer>
-    </div>
-  )
-}
-
-function formatWordDate(date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric"
-  }).format(date)
-}
-
-function RussianWordModalContent({
-  activeWord,
-  wordOffset,
-  onChangeOffset,
-  onSelectWord
-}) {
-  const meanings = Array.isArray(activeWord?.meaning) ? activeWord.meaning : []
-  const examples = Array.isArray(activeWord?.examples) ? activeWord.examples : []
-  const responses = Array.isArray(activeWord?.responses) ? activeWord.responses : []
-  const historyDays = 30
-  const recentWords = Array.from({ length: historyDays }, (_, index) => getRussianWordByOffset(-index)).filter((entry) => entry.word)
-  const phraseBank = RUSSIAN_WORDS.filter(Boolean)
-
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-2 sm:gap-3">
-        <button type="button" onClick={() => onChangeOffset(wordOffset - 1)} className="terminal-button-muted px-2.5 py-2 text-[0.68rem] sm:px-3 sm:text-xs">Prev Day</button>
-        <div className="terminal-chip-muted px-3 py-1 text-[0.62rem]">{formatWordDate(activeWord.date)}</div>
-        <button type="button" onClick={() => onChangeOffset(wordOffset + 1)} className="terminal-button-muted px-2.5 py-2 text-[0.68rem] sm:px-3 sm:text-xs">Next Day</button>
-      </div>
-
-      <div>
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <div className="terminal-label">Day Slider</div>
-          <div className="terminal-subtext text-xs">{Math.abs(wordOffset)} day back</div>
-        </div>
-        <input
-          type="range"
-          min={-180}
-          max={0}
-          step={1}
-          value={Math.min(0, Math.max(-180, wordOffset))}
-          onChange={(event) => onChangeOffset(Number(event.target.value))}
-          className="w-full accent-[var(--accent)]"
-        />
-      </div>
-
-      <div>
-        <div className="data-title text-[1.3rem] text-white sm:text-[1.6rem]">{activeWord.word?.word}</div>
-        {activeWord.word?.phonetic ? <div className="terminal-subtext mt-2 text-xs sm:text-sm">{activeWord.word.phonetic}</div> : null}
-        {meanings.length > 0 ? <div className="mt-3 text-base text-white sm:text-lg">{meanings.join(", ")}</div> : null}
-        {activeWord.word?.usage ? <div className="terminal-subtext mt-2 text-xs sm:text-sm">{activeWord.word.usage}</div> : null}
-      </div>
-
-      {examples.length > 0 ? (
-        <div className="space-y-2">
-          <div className="terminal-label">Examples</div>
-          {examples.slice(0, 2).map((example, index) => (
-            <div key={`${example.translation}-${index}`} className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
-              <div className="text-sm text-white">{example.russian}</div>
-              <div className="terminal-subtext mt-1 text-xs sm:text-sm">{example.translation}</div>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      {responses.length > 0 ? (
-        <div className="space-y-2">
-          <div className="terminal-label">Responses</div>
-          {responses.slice(0, 2).map((response, index) => (
-            <div key={`${response.meaning}-${index}`} className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
-              <div className="text-sm text-white">{response.russian}</div>
-              <div className="terminal-subtext mt-1 text-sm">{response.meaning}{response.phonetic ? ` • ${response.phonetic}` : ""}</div>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-        <div className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
-          <div className="terminal-label">Difficulty</div>
-          <div className="mt-2 text-xs text-white capitalize sm:text-sm">{activeWord.word?.difficulty ?? "Unknown"}</div>
-        </div>
-        <div className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
-          <div className="terminal-label">Category</div>
-          <div className="mt-2 text-xs text-white capitalize sm:text-sm">{String(activeWord.word?.category ?? "general").replace(/_/g, " ")}</div>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="section-heading mb-0">
-          <div className="terminal-label">Seen History</div>
-          <div className="terminal-subtext text-xs">Last {historyDays} days</div>
-        </div>
-        <div className="max-h-44 space-y-2 overflow-y-auto pr-1 sm:max-h-48">
-          {recentWords.map((entry) => (
-            <button
-              key={`${entry.date.toISOString()}-${entry.word?.id}`}
-              type="button"
-              onClick={() => onSelectWord(entry.date)}
-              className="w-full rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 text-left sm:py-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-white">{entry.word?.word}</div>
-                  <div className="terminal-subtext mt-1 text-xs uppercase">
-                    {Array.isArray(entry.word?.meaning) ? entry.word.meaning[0] : ""}
-                  </div>
-                </div>
-                <div className="terminal-subtext text-xs">{formatWordDate(entry.date)}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="section-heading mb-0">
-          <div className="terminal-label">Phrase Bank</div>
-          <div className="terminal-subtext text-xs">{phraseBank.length} words / phrases</div>
-        </div>
-        <div className="max-h-56 space-y-2 overflow-y-auto pr-1 sm:max-h-64">
-          {phraseBank.map((entry) => (
-            <div key={entry.id} className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5 sm:py-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-white">{entry.word}</div>
-                  {entry.phonetic ? <div className="terminal-subtext mt-1 text-xs">{entry.phonetic}</div> : null}
-                </div>
-                <div className="terminal-subtext text-xs capitalize">{String(entry.category ?? "general").replace(/_/g, " ")}</div>
-              </div>
-              {Array.isArray(entry.meaning) && entry.meaning.length > 0 ? (
-                <div className="terminal-subtext mt-2 text-xs sm:text-sm">{entry.meaning.join(", ")}</div>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function QuoteCard({ quote }) {
   return (
-    <section className="terminal-card px-4 py-4 sm:px-5 sm:py-5">
-      <div className="terminal-label">Quote Of The Day</div>
-      <div className="mt-3 text-[0.9rem] leading-[1.5] text-white/92 italic sm:text-[1.08rem]">&quot;{quote.quote}&quot;</div>
+    <section className="terminal-card border border-fuchsia-400/20 bg-[linear-gradient(135deg,rgba(35,8,29,0.95),rgba(28,11,45,0.92))] px-4 py-4 sm:px-5 sm:py-5">
+      <div className="terminal-label text-fuchsia-200">Quote Of The Day</div>
+      <div className="mt-3 text-[0.95rem] leading-[1.6] text-white/92 italic sm:text-[1.08rem]">&quot;{quote.quote}&quot;</div>
     </section>
   )
 }
@@ -452,29 +114,162 @@ function RussianWordCard({ word, onOpen }) {
 
   return (
     <button type="button" onClick={onOpen} className="w-full text-left">
-      <section className="terminal-card px-4 py-4 sm:px-5 sm:py-5">
-        <div className="terminal-label">Russian Word</div>
+      <section className="terminal-card border border-amber-400/20 bg-[linear-gradient(135deg,rgba(33,20,5,0.95),rgba(40,18,10,0.92))] px-4 py-4 sm:px-5 sm:py-5">
+        <div className="terminal-label text-amber-200">Russian Word Of The Day</div>
         <div className="data-title mt-3 text-[1.25rem] text-white sm:text-[1.55rem]">{word?.word ?? "..."}</div>
-        <div className="terminal-subtext mt-2 text-xs uppercase sm:text-sm">{meaning}</div>
+        {word?.phonetic ? <div className="terminal-subtext mt-2 text-xs text-amber-100/80 sm:text-sm">{word.phonetic}</div> : null}
+        <div className="terminal-subtext mt-2 text-xs uppercase text-amber-100/75 sm:text-sm">{meaning}</div>
       </section>
     </button>
   )
 }
 
-function GoalsSummaryCard({ label, percent, remainingLabel, onOpen }) {
+function SleepTracker({ value, onSave }) {
+  const [draft, setDraft] = useState(value)
+
+  useEffect(() => {
+    setDraft(value)
+  }, [value])
+
   return (
-    <button type="button" onClick={onOpen} className="w-full text-left">
-      <section className="terminal-card px-4 py-4">
-        <div className="terminal-label">{label}</div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="terminal-subtext text-xs sm:text-sm">{remainingLabel}</div>
-          <div className="text-xs font-semibold text-white sm:text-sm">{percent}%</div>
+    <section className="terminal-card border border-emerald-400/20 bg-[linear-gradient(135deg,rgba(5,31,18,0.95),rgba(13,40,24,0.92))] px-4 py-4 sm:px-5 sm:py-5">
+      <div className="terminal-label text-emerald-200">Sleep Tracker</div>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="text-sm text-white/90">Hours slept today</div>
+        <div className="text-lg font-semibold text-emerald-100">{Number(value) || 0}h</div>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <input
+          type="number"
+          min="0"
+          max="24"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          className="terminal-input min-w-0 flex-1 border-emerald-400/30 bg-emerald-950/20 px-3 py-2.5 text-white"
+          placeholder="0"
+        />
+        <button type="button" onClick={() => onSave(Math.max(0, Number(draft) || 0))} className="terminal-button px-4 py-2.5 text-xs sm:text-sm">Save</button>
+      </div>
+    </section>
+  )
+}
+
+function TaskCompletionChart({ data, label, dataKey, domain, formatter }) {
+  return (
+    <section className="terminal-card border border-orange-400/20 bg-[linear-gradient(135deg,rgba(32,16,5,0.95),rgba(24,15,11,0.92))] px-4 py-4 sm:px-5 sm:py-5">
+      <div className="terminal-label text-orange-200">{label}</div>
+      <div className="mt-4 h-44 w-full sm:h-52">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
+            <XAxis dataKey="date" stroke="var(--terminal-text-soft)" tickLine={false} axisLine={false} minTickGap={16} />
+            <YAxis stroke="var(--terminal-text-soft)" tickLine={false} axisLine={false} domain={domain} />
+            <Tooltip
+              formatter={formatter}
+              contentStyle={{
+                background: "rgba(9, 12, 17, 0.96)",
+                border: "1px solid rgba(255, 169, 77, 0.22)",
+                color: "#fff"
+              }}
+            />
+            <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} fill="url(#taskFill)" />
+            <defs>
+              <linearGradient id="taskFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#22d3ee" />
+              </linearGradient>
+            </defs>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  )
+}
+
+function RussianModalContent({ system, setSystem }) {
+  const [chartMode, setChartMode] = useState("sleep")
+  const todayKey = getDayKey()
+  const sleepSeries = getSleepSeries(system)
+  const taskSeries = getTaskPercentSeries(system)
+
+  const chartData = chartMode === "sleep" ? sleepSeries : taskSeries
+  const chartLabel = chartMode === "sleep" ? "Sleep Data - Last Week" : "Task Completion - Last Week"
+  const chartDomain = chartMode === "sleep" ? [0, 12] : [0, 100]
+  const chartFormatter = chartMode === "sleep"
+    ? (value) => [`${value}h`, "Sleep"]
+    : (value) => [`${value}%`, "Completed"]
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <div className="terminal-label text-amber-200">Russian Word Details</div>
+        <div className="terminal-subtext mt-1 text-xs text-white/60">Execution list, sleep tracker, and weekly chart</div>
+      </div>
+
+      <section className="terminal-card border border-white/10 bg-[linear-gradient(135deg,rgba(15,17,24,0.98),rgba(24,13,34,0.94))] px-4 py-4 sm:px-5 sm:py-5">
+        <div className="section-heading mb-4">
+          <div>
+            <div className="terminal-label text-sky-200">Past Russian Words</div>
+            <h3 className="data-title mt-2 text-sm text-white sm:text-base">Yesterday and older words</h3>
+          </div>
         </div>
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10 sm:h-2">
-          <div className="h-full rounded-full bg-[linear-gradient(90deg,rgb(var(--accent-rgb)),rgba(var(--hot-rgb),0.9))]" style={{ width: `${percent}%` }} />
+
+        <div className="space-y-2">
+          {getRecentRussianWords(7).map((entry) => (
+            <div key={`${entry.date.toISOString()}-${entry.word?.id}`} className="rounded-sm border border-white/8 bg-black/20 px-3 py-2.5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-white">{entry.word?.word}</div>
+                  <div className="terminal-subtext mt-1 text-xs uppercase text-white/65">
+                    {Array.isArray(entry.word?.meaning) ? entry.word.meaning[0] : ""}
+                  </div>
+                </div>
+                <div className="terminal-subtext text-xs text-white/65">{formatWordDate(entry.date)}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
-    </button>
+
+      <DailyTasks />
+
+      <SleepTracker
+        value={getDailyLog(system, todayKey).checkIn?.sleep ?? 0}
+        onSave={(value) => {
+          setSystem((current) => updateDailyLog(current, todayKey, (log) => ({
+            ...log,
+            checkIn: {
+              ...log.checkIn,
+              sleep: Math.max(0, Number(value) || 0)
+            }
+          })))
+        }}
+      />
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setChartMode("sleep")}
+          className={`terminal-button-muted flex-1 px-3 py-2.5 text-xs sm:text-sm ${chartMode === "sleep" ? "border-[rgba(34,211,238,0.5)] text-white" : ""}`}
+        >
+          Sleep
+        </button>
+        <button
+          type="button"
+          onClick={() => setChartMode("completion")}
+          className={`terminal-button-muted flex-1 px-3 py-2.5 text-xs sm:text-sm ${chartMode === "completion" ? "border-[rgba(245,158,11,0.5)] text-white" : ""}`}
+        >
+          Completion
+        </button>
+      </div>
+
+      <TaskCompletionChart
+        data={chartData}
+        label={chartLabel}
+        dataKey="value"
+        domain={chartDomain}
+        formatter={chartFormatter}
+      />
+    </div>
   )
 }
 
@@ -482,7 +277,7 @@ function Modal({ open, title, children, onClose }) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-2.5 sm:p-3 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-2.5 sm:items-center sm:p-3">
       <div className="terminal-card terminal-modal w-full max-w-[420px] px-4 py-4 sm:px-5 sm:py-5">
         <div className="section-heading mb-4">
           <h2 className="data-title text-base text-white">{title}</h2>
@@ -496,197 +291,40 @@ function Modal({ open, title, children, onClose }) {
 
 export default function Page() {
   const { system, setSystem } = useTeesha()
-  const [isLogDayOpen, setIsLogDayOpen] = useState(false)
-  const [isRussianOpen, setIsRussianOpen] = useState(false)
-  const [isMomentumOpen, setIsMomentumOpen] = useState(false)
-  const [isWeeklyOpen, setIsWeeklyOpen] = useState(false)
-  const [isMonthlyOpen, setIsMonthlyOpen] = useState(false)
-  const [russianWordOffset, setRussianWordOffset] = useState(0)
-  const [selectedCheckInMetric, setSelectedCheckInMetric] = useState("sleep")
-  const [checkInDraft, setCheckInDraft] = useState({
-    sleep: "",
-    energy: "",
-    mood: "",
-    focus: "",
-    stress: ""
-  })
-
-  useEffect(() => {
-    if (!system) {
-      return
-    }
-
-    const todayKey = getDayKey()
-    const popupKey = `teeshaOS.russianWordSeen.${todayKey}`
-
-    if (typeof window !== "undefined" && !window.localStorage.getItem(popupKey)) {
-      window.localStorage.setItem(popupKey, "1")
-      const frameId = window.requestAnimationFrame(() => {
-        setIsRussianOpen(true)
-      })
-
-      return () => window.cancelAnimationFrame(frameId)
-    }
-
-    return undefined
-  }, [system])
-
   const quote = useMemo(() => getQuoteOfTheDay(), [])
   const russianWord = useMemo(() => getRussianWordOfTheDay(), [])
+  const [isRussianOpen, setIsRussianOpen] = useState(false)
 
   if (!system) {
     return null
   }
 
-  const todayKey = getDayKey()
-  const weekKey = getWeekKey()
-  const monthKey = getMonthKey()
-  const todayLog = getDailyLog(system, todayKey)
-  const todayTasks = getTodayTasks(system, todayKey)
-  const weeklyGoals = getWeekGoals(system, weekKey)
-  const monthlyGoals = getMonthGoals(system, monthKey)
-  const weeklyPercent = getProgressPercent(weeklyGoals)
-  const monthlyPercent = getProgressPercent(monthlyGoals)
-  const completedTasks = todayTasks.filter((task) => task.completed).length
-  const completedHabits = todayLog.habitsCompleted.length
-  const remainingTasks = Math.max(0, todayTasks.length - completedTasks)
-  const remainingHabits = Math.max(0, (system.habits?.length ?? 0) - completedHabits)
-  const remainingWeekly = Math.max(0, weeklyGoals.length - weeklyGoals.filter((goal) => goal.completed).length)
-  const remainingMonthly = Math.max(0, monthlyGoals.length - monthlyGoals.filter((goal) => goal.completed).length)
-  const taskPercent = getRollingTaskPercent(system, todayKey)
-  const habitPercent = getRollingHabitPercent(system, todayLog)
-  const weeklyDisplayPercent = weeklyGoals.length > 0 ? weeklyPercent : clampPercent(average(getRecentDayKeys(system).map((dayKey) => getProgressPercent(getWeekGoals(system, getWeekKey(new Date(`${dayKey}T00:00:00`)))))))
-  const momentum = calculateMomentum(system)
-  const momentumSeries = getMomentumSeries(system)
-  const previousMomentum = momentumSeries.length > 1 ? momentumSeries.at(-2)?.score ?? momentum : momentum
-  const momentumDelta = momentum - previousMomentum
-  const momentumSignal = getTrendSignal(momentumDelta, momentum)
-  const momentumBars = getSparkValues(momentumSeries.map((entry) => entry.score), 7)
-  const checkInChartData = getCheckInChartData(system)
-  const moneySeries = getMoneySeries(system)
-  const latestMoney = moneySeries.at(-1)?.amount ?? 0
-  const activeRussianWord = getRussianWordByOffset(russianWordOffset)
-  const progressItems = [
-    { label: "Tasks", percent: taskPercent, remainingLabel: `${remainingTasks} left today` },
-    { label: "Habits", percent: habitPercent, remainingLabel: `${remainingHabits} left today` },
-    { label: "Weekly", percent: weeklyDisplayPercent, remainingLabel: `${remainingWeekly} left this week` },
-    { label: "Monthly", percent: monthlyPercent, remainingLabel: `${remainingMonthly} left this month` }
-  ]
-
-  function saveCheckIn() {
-    setSystem((current) => updateDailyLog(current, todayKey, (log) => ({
-      ...log,
-      checkIn: {
-        sleep: Math.max(0, Number(checkInDraft.sleep) || 0),
-        energy: Math.max(0, Number(checkInDraft.energy) || 0),
-        mood: Math.max(0, Number(checkInDraft.mood) || 0),
-        focus: Math.max(0, Number(checkInDraft.focus) || 0),
-        stress: Math.max(0, Number(checkInDraft.stress) || 0)
-      }
-    })))
-    setIsLogDayOpen(false)
-  }
-
-  function openLogDay() {
-    setCheckInDraft({
-      sleep: todayLog.checkIn.sleep || "",
-      energy: todayLog.checkIn.energy || "",
-      mood: todayLog.checkIn.mood || "",
-      focus: todayLog.checkIn.focus || "",
-      stress: todayLog.checkIn.stress || ""
-    })
-    setIsLogDayOpen(true)
-  }
+  const bankBalance = system.bankBalance ?? 0
+  const activeRussianWord = russianWord
 
   return (
-    <div className="mx-auto max-w-[390px] px-2.5 pb-5 pt-3 sm:max-w-[470px] sm:px-4 sm:py-6">
+    <div className="mx-auto max-w-[420px] px-2.5 pb-5 pt-3 sm:max-w-[520px] sm:px-4 sm:py-6">
       <div className="app-frame px-2.5 py-3 sm:px-4 sm:py-5">
         <div className="app-content space-y-3 sm:space-y-4">
           <div className="px-1 pb-1">
-            <div className="terminal-label">System</div>
-            <h1 className="data-title mt-2 text-[1.12rem] text-white sm:text-[1.32rem]">BioTracker</h1>
+            <div className="terminal-label text-white/80">Execution System</div>
           </div>
 
           <BankBalanceCard
-            balance={system.bankBalance ?? latestMoney}
+            balance={bankBalance}
             onSave={(value) => setSystem((current) => ({ ...current, bankBalance: value }))}
           />
 
           <QuoteCard quote={quote} />
 
-          <MainSystemCard
-            progressItems={progressItems}
-            momentum={momentum}
-            momentumSignal={momentumSignal}
-            momentumBars={momentumBars}
-            onLogDay={openLogDay}
-            onOpenMomentum={() => setIsMomentumOpen(true)}
-            checkInChartData={checkInChartData}
-            selectedCheckInMetric={selectedCheckInMetric}
-            onSelectCheckInMetric={setSelectedCheckInMetric}
-          />
-          <RussianWordCard
-            word={activeRussianWord.word ?? russianWord}
-            onOpen={() => setIsRussianOpen(true)}
-          />
+          <RussianWordCard word={activeRussianWord} onOpen={() => setIsRussianOpen(true)} />
 
           <DailyTasks />
-          <HabitTracker />
-          <GoalsSummaryCard label="Weekly Goals" percent={weeklyPercent} remainingLabel={`${remainingWeekly} left this week`} onOpen={() => setIsWeeklyOpen(true)} />
-          <GoalsSummaryCard label="Monthly Goals" percent={monthlyPercent} remainingLabel={`${remainingMonthly} left this month`} onOpen={() => setIsMonthlyOpen(true)} />
         </div>
       </div>
 
-      <Modal open={isLogDayOpen} title="Log Day" onClose={() => setIsLogDayOpen(false)}>
-        <div className="space-y-3">
-          {CHECKIN_FIELDS.map((field) => (
-            <label key={field.key} className="block">
-              <div className="terminal-label mb-2">{field.label}</div>
-              <input
-                type="number"
-                value={checkInDraft[field.key]}
-                onChange={(event) => setCheckInDraft((current) => ({ ...current, [field.key]: event.target.value }))}
-                className="terminal-input w-full px-3 py-2.5 sm:py-3"
-              />
-            </label>
-          ))}
-          <button type="button" onClick={saveCheckIn} className="terminal-button mt-2 w-full px-3 py-2.5 text-xs sm:px-4 sm:py-3 sm:text-sm">Save</button>
-        </div>
-      </Modal>
-
       <Modal open={isRussianOpen} title="Russian Word" onClose={() => setIsRussianOpen(false)}>
-        <RussianWordModalContent
-          activeWord={activeRussianWord}
-          wordOffset={russianWordOffset}
-          onChangeOffset={setRussianWordOffset}
-          onSelectWord={(date) => {
-            const baseDate = new Date()
-            baseDate.setHours(0, 0, 0, 0)
-            const targetDate = new Date(date)
-            targetDate.setHours(0, 0, 0, 0)
-            const diffDays = Math.round((targetDate - baseDate) / (24 * 60 * 60 * 1000))
-            setRussianWordOffset(diffDays)
-          }}
-        />
-      </Modal>
-
-      <Modal open={isMomentumOpen} title="Momentum" onClose={() => setIsMomentumOpen(false)}>
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <div className="terminal-label">Overall Score</div>
-            <div className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{momentum}</div>
-          </div>
-          <div className={`text-xs font-semibold sm:text-sm ${momentumSignal.className}`}>{momentumSignal.symbol} {momentumSignal.label}</div>
-        </div>
-        <MomentumChartCard data={momentumSeries} />
-      </Modal>
-
-      <Modal open={isWeeklyOpen} title="Weekly Goals" onClose={() => setIsWeeklyOpen(false)}>
-        <WeeklyGoals />
-      </Modal>
-
-      <Modal open={isMonthlyOpen} title="Monthly Goals" onClose={() => setIsMonthlyOpen(false)}>
-        <MonthlyGoals />
+        <RussianModalContent system={system} setSystem={setSystem} />
       </Modal>
     </div>
   )
