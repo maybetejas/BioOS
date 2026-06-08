@@ -129,3 +129,19 @@ export function updateStoredSystem(updater) {
 
   return normalized
 }
+
+export function clearStoredSystem() {
+  if (typeof window === "undefined") {
+    return null
+  }
+
+  localStorage.removeItem(STORAGE_KEY)
+  clearLegacyStorage()
+  cachedSnapshot = null
+
+  const freshSystem = readStoredSystem()
+  cachedSnapshot = freshSystem
+  notifyListeners()
+
+  return freshSystem
+}

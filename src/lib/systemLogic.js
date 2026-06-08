@@ -247,7 +247,8 @@ function normalizeCheckIn(checkIn) {
     energy: normalizeNumber(checkIn?.energy, 0),
     mood: normalizeNumber(checkIn?.mood, 0),
     focus: normalizeNumber(checkIn?.focus, 0),
-    stress: normalizeNumber(checkIn?.stress, 0)
+    stress: normalizeNumber(checkIn?.stress, 0),
+    russianReviewed: Boolean(checkIn?.russianReviewed)
   }
 }
 
@@ -304,7 +305,8 @@ function emptyDailyLog() {
       energy: 0,
       mood: 0,
       focus: 0,
-      stress: 0
+      stress: 0,
+      russianReviewed: false
     }
   }
 }
