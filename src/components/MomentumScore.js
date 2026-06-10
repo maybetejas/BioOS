@@ -10,7 +10,7 @@ import {
   YAxis
 } from "recharts"
 import { useTeesha } from "@/context/TeeshaContext"
-import { getDailyLog, getMomentumSeries, getTodayKpiCompletion } from "@/lib/dashboard"
+import { getHabitCompletionStats, getMomentumSeries, getTodayKpiCompletion } from "@/lib/dashboard"
 import { calculateMomentum } from "@/lib/momentum"
 import { getDayKey } from "@/lib/systemLogic"
 
@@ -25,11 +25,10 @@ export default function MomentumScore() {
   if (!system) return null
 
   const todayKey = getDayKey()
-  const todayLog = getDailyLog(system, todayKey)
   const todayTasks = system.tasks.filter((task) => task.date === todayKey)
   const completedTasks = todayTasks.filter((task) => task.completed).length
   const taskCompletion = ratio(completedTasks, todayTasks.length)
-  const habitCompletion = ratio(todayLog.habitsCompleted.length, system.habits.length)
+  const habitCompletion = getHabitCompletionStats(system, todayKey).progress
   const kpiCompletion = getTodayKpiCompletion(system, todayKey)
   const momentum = calculateMomentum(system)
   const momentumSeries = getMomentumSeries(system)

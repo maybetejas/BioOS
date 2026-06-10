@@ -1,4 +1,4 @@
-import { getMonthKey, getWeekKey } from "@/lib/systemLogic"
+import { getMonthKey, getWeekKey, isHabitScheduledForDay } from "@/lib/systemLogic"
 
 const CHECKIN_FIELDS = ["sleep", "energy", "mood", "focus", "stress"]
 
@@ -70,9 +70,14 @@ export function calculateTodayScoreForDay(system, dayKey) {
   const taskRatio = ratio(completedTasks, todayTasks.length)
 
   const habitsCompleted = Array.isArray(todayLog?.habitsCompleted)
-    ? todayLog.habitsCompleted.length
-    : 0
-  const habitRatio = ratio(habitsCompleted, system.habits?.length ?? 0)
+    ? todayLog.habitsCompleted
+    : []
+  const scheduledHabits = (system?.habits ?? []).filter((habit) => isHabitScheduledForDay(habit, dayKey))
+  const completedSet = new Set(habitsCompleted)
+  const habitRatio = ratio(
+    scheduledHabits.filter((habit) => completedSet.has(habit.name)).length,
+    scheduledHabits.length
+  )
   const kpiRatio = getKpiCompletion(system, dayKey)
   const checkInRatio = getCheckInCompletion(system, dayKey)
   const weeklyRatio = getWeeklyCompletion(system, dayKey)

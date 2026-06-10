@@ -1,4 +1,5 @@
 const DAY_MS = 24 * 60 * 60 * 1000
+export const HABIT_REPEAT_DAYS = [0, 1, 2, 3, 4, 5, 6]
 export const DEFAULT_THEME_ACCENT = "#6dff8b"
 export const THEME_ACCENT_CYCLE = [
   "#d879ff",
@@ -107,6 +108,28 @@ function normalizeDayKey(value, fallback) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value)) ? value : fallback
 }
 
+function parseDayKey(value) {
+  const [year, month, day] = String(value).split("-").map(Number)
+  return new Date(year, (month || 1) - 1, day || 1)
+}
+
+function formatDayKey(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function normalizeRepeatDays(value) {
+  if (!Array.isArray(value)) {
+    return HABIT_REPEAT_DAYS
+  }
+
+  const repeatDays = [...new Set(value
+    .map((day) => Number(day))
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))]
+    .sort((left, right) => left - right)
+
+  return repeatDays.length > 0 ? repeatDays : HABIT_REPEAT_DAYS
+}
+
 function normalizeWeekKey(value, fallback) {
   return /^\d{4}-W\d{2}$/.test(String(value)) ? value : fallback
 }
@@ -208,6 +231,7 @@ function normalizeHabit(habit) {
   return {
     id: habit?.id ?? Date.now() + Math.random(),
     name,
+    repeatDays: normalizeRepeatDays(habit?.repeatDays),
     streak: Math.max(0, Math.floor(normalizeNumber(habit?.streak, 0))),
     lastCompletedDate: normalizeDayKey(habit?.lastCompletedDate ?? habit?.lastCompletedOn, null)
   }
@@ -369,11 +393,13 @@ function resetMissedHabitStreaks(habits, todayKey) {
       return { ...habit, streak: 0 }
     }
 
-    const lastDate = new Date(`${habit.lastCompletedDate}T00:00:00`)
-    const today = new Date(`${todayKey}T00:00:00`)
-    const diffDays = Math.round((today - lastDate) / DAY_MS)
+    if (!isHabitScheduledForDay(habit, todayKey)) {
+      return habit
+    }
 
-    if (diffDays > 1) {
+    const previousScheduledDay = getPreviousScheduledHabitDayKey(habit, todayKey)
+
+    if (habit.lastCompletedDate !== todayKey && habit.lastCompletedDate !== previousScheduledDay) {
       return {
         ...habit,
         streak: 0
@@ -493,6 +519,28 @@ export function getEmptyDailyLog() {
 
 export function getAcquiredHabits(habits) {
   return habits.filter((habit) => habit.streak >= 7)
+}
+
+export function getHabitRepeatDays(habit) {
+  return normalizeRepeatDays(habit?.repeatDays)
+}
+
+export function isHabitScheduledForDay(habit, dayKey = getDayKey()) {
+  return getHabitRepeatDays(habit).includes(parseDayKey(dayKey).getDay())
+}
+
+export function getPreviousScheduledHabitDayKey(habit, dayKey = getDayKey()) {
+  const date = parseDayKey(dayKey)
+
+  for (let offset = 1; offset <= 366; offset += 1) {
+    date.setDate(date.getDate() - 1)
+
+    if (isHabitScheduledForDay(habit, formatDayKey(date))) {
+      return formatDayKey(date)
+    }
+  }
+
+  return null
 }
 
 export function getThemeAccentForDate(date = new Date()) {

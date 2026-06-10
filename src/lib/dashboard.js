@@ -1,5 +1,5 @@
 import { buildMomentumSeries } from "@/lib/momentum"
-import { getDayKey, getEmptyDailyLog, getMonthKey, getWeekKey } from "@/lib/systemLogic"
+import { getDayKey, getEmptyDailyLog, getMonthKey, getWeekKey, isHabitScheduledForDay } from "@/lib/systemLogic"
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
@@ -118,9 +118,15 @@ export function getTaskDeadlineState(task, now = new Date()) {
   }
 }
 
+export function getScheduledHabits(system, dayKey = getDayKey()) {
+  return (system?.habits ?? []).filter((habit) => isHabitScheduledForDay(habit, dayKey))
+}
+
 export function getHabitCompletionStats(system, dayKey = getDayKey()) {
-  const total = system?.habits?.length ?? 0
-  const completed = (getDailyLog(system, dayKey).habitsCompleted ?? []).length
+  const scheduledHabits = getScheduledHabits(system, dayKey)
+  const completedSet = new Set(getDailyLog(system, dayKey).habitsCompleted ?? [])
+  const total = scheduledHabits.length
+  const completed = scheduledHabits.filter((habit) => completedSet.has(habit.name)).length
 
   return {
     total,

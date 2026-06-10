@@ -16,7 +16,7 @@ import {
 import HabitTracker from "@/components/HabitTracker"
 import { useTeesha } from "@/context/TeeshaContext"
 import { getDailyLog, getHabitCompletionStats, updateDailyLog } from "@/lib/dashboard"
-import { getDayKey } from "@/lib/systemLogic"
+import { getDayKey, isHabitScheduledForDay } from "@/lib/systemLogic"
 import { getQuoteOfTheDay } from "@/lib/quotes"
 import { getRussianWordByOffset, getRussianWordOfTheDay } from "@/lib/russianWords"
 import { clearStoredSystem } from "@/lib/storage"
@@ -103,14 +103,18 @@ function getHabitSeries(system, days = 7) {
 }
 
 function getHabitDetailSeries(system, habitName, days = 14) {
+  const habit = (system?.habits ?? []).find((entry) => entry.name === habitName)
+
   return getRecentDays(days).map((day) => {
     const completed = getDailyLog(system, day.dayKey).habitsCompleted ?? []
+    const scheduled = habitName === "all" || (habit ? isHabitScheduledForDay(habit, day.dayKey) : false)
     const value = habitName === "all"
-      ? completed.length
-      : completed.includes(habitName) ? 1 : 0
+      ? getHabitCompletionStats(system, day.dayKey).completed
+      : scheduled && completed.includes(habitName) ? 1 : 0
 
     return {
       ...day,
+      scheduled,
       value
     }
   })
@@ -358,7 +362,13 @@ function HabitChart({ data, detailData, habits, selectedHabit, onSelectedHabitCh
           <XAxis dataKey="label" stroke="rgba(255,255,255,0.52)" tickLine={false} axisLine={false} fontSize={11} minTickGap={12} />
           <YAxis allowDecimals={false} stroke="rgba(255,255,255,0.52)" tickLine={false} axisLine={false} fontSize={11} domain={[0, "dataMax"]} />
           <Tooltip
-            formatter={(value) => activeHabit === "all" ? [`${value} habits`, "Completed"] : [value ? "Done" : "Missed", activeHabit]}
+            formatter={(value, name, item) => {
+              if (activeHabit === "all") {
+                return [`${value} habits`, "Completed"]
+              }
+
+              return [item?.payload?.scheduled ? (value ? "Done" : "Missed") : "Off day", activeHabit]
+            }}
             contentStyle={{ background: "rgba(18, 9, 34, 0.96)", border: "1px solid rgba(216, 121, 255, 0.32)", borderRadius: "12px", color: "#fff" }}
           />
           <Bar dataKey={activeHabit === "all" ? "completed" : "value"} radius={[8, 8, 2, 2]} fill="url(#habitGlow)" />
