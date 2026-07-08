@@ -1,16 +1,15 @@
-import { Orbitron, Rajdhani } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TeeshaProvider } from "@/context/TeeshaContext";
 
-const orbitron = Orbitron({
-  variable: "--font-orbitron",
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
 });
 
-const rajdhani = Rajdhani({
-  variable: "--font-rajdhani",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata = {
@@ -21,7 +20,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${orbitron.variable} ${rajdhani.variable} antialiased`}>
+      <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <TeeshaProvider>
           {children}
         </TeeshaProvider>

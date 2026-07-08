@@ -37,12 +37,12 @@ export default function MomentumScore() {
     <section className="terminal-section">
       <div className="section-heading">
         <div>
-          <div className="terminal-label">Current Momentum Velocity</div>
-          <h3 className="data-title mt-2 text-xl text-white">Momentum Score</h3>
+          <div className="terminal-label">Momentum</div>
+          <h3 className="data-title mt-2 text-xl text-white">Execution score</h3>
         </div>
       </div>
 
-      <div className="terminal-card px-4 py-5">
+      <div className="panel-frame px-4 py-5">
         <div
           className="mx-auto grid h-[220px] w-[220px] place-items-center rounded-full border border-white/10"
           style={{ background: `conic-gradient(rgb(var(--accent-rgb)) 0 ${momentum * 3.6}deg, rgba(255,255,255,0.14) ${momentum * 3.6}deg 360deg)` }}
@@ -50,7 +50,7 @@ export default function MomentumScore() {
           <div className="grid h-[178px] w-[178px] place-items-center rounded-full bg-[rgb(var(--ink-rgb))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
             <div className="text-center">
               <div className="neon-number money-primary text-[4rem]">{momentum}</div>
-              <div className="hot-text text-sm font-semibold uppercase tracking-[0.08em]">{Math.round(kpiCompletion * 100)}% KPI rate</div>
+              <div className="hot-text text-sm font-semibold">{Math.round(kpiCompletion * 100)}% KPI rate</div>
             </div>
           </div>
         </div>

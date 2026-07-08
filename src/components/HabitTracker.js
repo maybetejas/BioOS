@@ -176,8 +176,7 @@ export default function HabitTracker({ onPositiveTick }) {
             No habits scheduled today.
           </div>
         ) : null}
-        {activeHabits.map((habit, index) => {
-          const colorClass = index % 3 === 0 ? "money-secondary" : index % 3 === 1 ? "money-primary" : "ember-text"
+        {activeHabits.map((habit) => {
           const streakWidth = `${Math.min(100, Math.round((habit.streak / 7) * 100))}%`
           const repeatLabel = formatRepeatLabel(habit.repeatDays)
 
@@ -195,14 +194,13 @@ export default function HabitTracker({ onPositiveTick }) {
               }}
             >
               <div className="flex items-start gap-3">
-                <div className={`grid h-9 w-9 place-items-center border ${colorClass} text-sm font-bold sm:h-11 sm:w-11 sm:text-lg`}>+</div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="break-words text-sm font-semibold text-white sm:text-base">{habit.name}</div>
                       <div className="terminal-subtext mt-1 text-[0.68rem] uppercase tracking-[0.12em]">{repeatLabel}</div>
                     </div>
-                    <div className={`text-xs font-semibold uppercase sm:text-sm ${colorClass}`}>{habit.streak}d</div>
+                    <div className="text-xs font-semibold uppercase text-white/70 sm:text-sm">{habit.streak}d</div>
                   </div>
                   <div className="thin-track mt-2.5 sm:mt-3">
                     <div className="thin-fill" style={{ width: streakWidth }} />

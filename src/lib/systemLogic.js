@@ -1,27 +1,13 @@
 const DAY_MS = 24 * 60 * 60 * 1000
 export const HABIT_REPEAT_DAYS = [0, 1, 2, 3, 4, 5, 6]
-export const DEFAULT_THEME_ACCENT = "#6dff8b"
+export const DEFAULT_THEME_ACCENT = "#d84a32"
 export const THEME_ACCENT_CYCLE = [
-  "#d879ff",
-  "#25e7ff",
-  "#7dff5d",
-  "#ff5c7c",
-  "#ffd166",
-  "#7c5cff",
-  "#35f2a6",
-  "#ff8c42",
-  "#00c2ff",
-  "#ff4fd8",
-  "#9eff6d",
-  "#ff6b6b",
-  "#6de7ff",
-  "#a56dff",
-  "#f7c95c",
-  "#4dffb8",
-  "#ff9f1c",
-  "#00ffa8",
-  "#ff7ad9",
-  "#63b3ff"
+  "#d84a32",
+  "#111111",
+  "#6f756f",
+  "#b58a38",
+  "#2e6f5a",
+  "#395f85"
 ]
 
 export const DEFAULT_SCHEDULE = [
@@ -63,6 +49,14 @@ export function getWeekKey(date = new Date()) {
 
 export function getMonthKey(date = new Date()) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`
+}
+
+export function getPreviousMonthKey(date = new Date()) {
+  return getMonthKey(new Date(date.getFullYear(), date.getMonth() - 1, 1))
+}
+
+export function getRetainedMonthKeys(date = new Date()) {
+  return [getPreviousMonthKey(date), getMonthKey(date)]
 }
 
 export function getWeekStart(date = new Date()) {
@@ -111,6 +105,19 @@ function normalizeDayKey(value, fallback) {
 function parseDayKey(value) {
   const [year, month, day] = String(value).split("-").map(Number)
   return new Date(year, (month || 1) - 1, day || 1)
+}
+
+function getMonthKeyFromDayKey(dayKey) {
+  return normalizeDayKey(dayKey, "").slice(0, 7)
+}
+
+function getMonthKeyFromDateString(value) {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? "" : getMonthKey(date)
+}
+
+function isRetainedMonth(monthKey, retainedMonthKeys) {
+  return retainedMonthKeys.includes(normalizeMonthKey(monthKey, ""))
 }
 
 function formatDayKey(date) {
@@ -411,22 +418,22 @@ function resetMissedHabitStreaks(habits, todayKey) {
 }
 
 function pruneToCurrentWindows(system, now) {
-  const weekStart = getWeekStart(now)
-  const currentWeekKey = getWeekKey(now)
-  const currentMonthKey = getMonthKey(now)
+  const retainedMonthKeys = getRetainedMonthKeys(now)
 
   return {
     ...system,
     tasks: system.tasks.filter((task) => {
-      const taskDate = new Date(`${task.date}T00:00:00`)
-      return taskDate >= weekStart
+      return isRetainedMonth(getMonthKeyFromDayKey(task.date), retainedMonthKeys)
     }),
-    weeklyGoals: system.weeklyGoals.filter((goal) => goal.weekKey === currentWeekKey),
-    monthlyGoals: system.monthlyGoals.filter((goal) => goal.monthKey === currentMonthKey),
+    weeklyGoals: system.weeklyGoals.filter((goal) => {
+      const createdMonthKey = getMonthKeyFromDateString(goal.createdAt)
+      return isRetainedMonth(createdMonthKey, retainedMonthKeys)
+    }),
+    monthlyGoals: system.monthlyGoals.filter((goal) => isRetainedMonth(goal.monthKey, retainedMonthKeys)),
     dailyLogs: Object.fromEntries(
-      Object.entries(system.dailyLogs).filter(([dayKey]) => new Date(`${dayKey}T00:00:00`) >= weekStart)
+      Object.entries(system.dailyLogs).filter(([dayKey]) => isRetainedMonth(getMonthKeyFromDayKey(dayKey), retainedMonthKeys))
     ),
-    momentumHistory: system.momentumHistory.slice(-90)
+    momentumHistory: system.momentumHistory.filter((entry) => isRetainedMonth(getMonthKeyFromDayKey(entry.dateKey), retainedMonthKeys))
   }
 }
 

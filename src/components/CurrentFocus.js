@@ -40,13 +40,13 @@ export default function CurrentFocus() {
     <section className="terminal-card px-4 py-5 sm:px-5">
       <div className="section-heading">
         <div>
-          <div className="terminal-label">Current Focus</div>
+          <div className="terminal-label">Current focus</div>
           <h2 className="data-title mt-2 text-[1.95rem] leading-none text-white sm:text-[2.35rem]">
-            {activeBlock ? activeBlock.label.replace(/\s+/g, "_").toUpperCase() : "OFF_GRID"}
+            {activeBlock ? activeBlock.label : "Open time"}
           </h2>
         </div>
         <div className="terminal-chip-muted px-3 py-1 text-[0.65rem]">
-          {activeBlock ? "Urgent" : "Standby"}
+          {activeBlock ? "Now" : "Clear"}
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export default function CurrentFocus() {
       </div>
 
       <div className="terminal-subtext mt-3 text-sm">
-        {activeBlock ? "This is what you should be doing right now." : "No schedule block is active right now."}
+        {activeBlock ? "This block is active right now." : "No schedule block is active right now."}
       </div>
     </section>
   )

@@ -15,11 +15,14 @@ import {
 } from "recharts"
 import HabitTracker from "@/components/HabitTracker"
 import { useTeesha } from "@/context/TeeshaContext"
-import { getDailyLog, getHabitCompletionStats, updateDailyLog } from "@/lib/dashboard"
+import {
+  getDailyLog,
+  getHabitCompletionStats,
+  updateDailyLog
+} from "@/lib/dashboard"
 import { getDayKey, isHabitScheduledForDay } from "@/lib/systemLogic"
 import { getQuoteOfTheDay } from "@/lib/quotes"
 import { getRussianWordByOffset, getRussianWordOfTheDay } from "@/lib/russianWords"
-import { clearStoredSystem } from "@/lib/storage"
 
 const SLEEP_TARGET = 8
 
@@ -164,7 +167,7 @@ function StatPill({ label, value }) {
 function QuoteCard({ quote }) {
   return (
     <Card className="quote-card">
-      <div className="terminal-label">Quote of the day</div>
+      <div className="terminal-label">Quote</div>
       <div className="mt-3 text-[0.98rem] leading-relaxed text-white/90">&quot;{quote.quote}&quot;</div>
     </Card>
   )
@@ -174,15 +177,15 @@ function RussianWordCard({ word, studied, streak, rhythm, onToggleStudied, onOpe
   return (
     <Card>
       <div className="flex items-start gap-4">
-        <button type="button" onClick={onOpen} className="magic-tile grid h-16 w-16 shrink-0 place-items-center text-3xl">
-          *
+        <button type="button" onClick={onOpen} className="magic-tile grid h-16 w-16 shrink-0 place-items-center text-sm font-semibold" aria-label="Open Russian word details">
+          RU
         </button>
         <div className="min-w-0 flex-1">
-          <div className="terminal-label">Russian word of the day</div>
+          <div className="terminal-label">Russian practice</div>
           <button type="button" onClick={onOpen} className="mt-2 block text-left">
             <div className="data-title text-[1.55rem] leading-tight text-white">{repairText(word?.word) || "..."}</div>
             {word?.phonetic ? <div className="terminal-subtext mt-1 text-xs">{repairText(word.phonetic)}</div> : null}
-            <div className="terminal-subtext mt-1 text-xs uppercase text-white/70">{getMeaning(word)}</div>
+            <div className="terminal-subtext mt-1 text-sm text-white/70">{getMeaning(word)}</div>
           </button>
         </div>
       </div>
@@ -198,13 +201,13 @@ function RussianWordCard({ word, studied, streak, rhythm, onToggleStudied, onOpe
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="terminal-subtext text-xs">{streak} day Russian streak</div>
+        <div className="terminal-subtext text-xs">{streak} day review streak</div>
         <button
           type="button"
           onClick={onToggleStudied}
           className={`terminal-button px-3 py-2 text-xs ${studied ? "studied-button" : ""}`}
         >
-          {studied ? "Studied" : "Mark studied"}
+          {studied ? "Reviewed" : "Mark reviewed"}
         </button>
       </div>
     </Card>
@@ -304,7 +307,7 @@ function ChartCard({ title, subtitle, children, action }) {
 
 function SleepChart({ data }) {
   return (
-    <ChartCard title="Sleep data" subtitle="Last 7 days, target line is 8h">
+    <ChartCard title="Sleep" subtitle="Last 7 days, target line is 8h">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
           <defs>
@@ -313,14 +316,14 @@ function SleepChart({ data }) {
               <stop offset="100%" stopColor="rgb(var(--accent-rgb))" stopOpacity={0.08} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-          <XAxis dataKey="label" stroke="rgba(255,255,255,0.52)" tickLine={false} axisLine={false} fontSize={11} minTickGap={12} />
-          <YAxis stroke="rgba(255,255,255,0.52)" tickLine={false} axisLine={false} fontSize={11} domain={[0, 12]} />
+          <CartesianGrid stroke="rgba(17,17,17,0.08)" vertical={false} />
+          <XAxis dataKey="label" stroke="rgba(17,17,17,0.54)" tickLine={false} axisLine={false} fontSize={11} minTickGap={12} />
+          <YAxis stroke="rgba(17,17,17,0.54)" tickLine={false} axisLine={false} fontSize={11} domain={[0, 12]} />
           <Tooltip
             formatter={(value) => [`${value}h`, "Sleep"]}
-            contentStyle={{ background: "rgba(18, 9, 34, 0.96)", border: "1px solid rgba(216, 121, 255, 0.32)", borderRadius: "12px", color: "#fff" }}
+            contentStyle={{ background: "#ffffff", border: "1px solid rgba(17, 17, 17, 0.14)", borderRadius: "8px", color: "#111111" }}
           />
-          <ReferenceLine y={SLEEP_TARGET} stroke="rgba(255,255,255,0.36)" strokeDasharray="4 5" />
+          <ReferenceLine y={SLEEP_TARGET} stroke="rgba(17,17,17,0.24)" strokeDasharray="4 5" />
           <Area type="monotone" dataKey="sleep" stroke="rgb(var(--accent-strong-rgb))" strokeWidth={2.5} fill="url(#sleepGlow)" activeDot={{ r: 5 }} />
         </AreaChart>
       </ResponsiveContainer>
@@ -335,7 +338,7 @@ function HabitChart({ data, detailData, habits, selectedHabit, onSelectedHabitCh
 
   return (
     <ChartCard
-      title="Habit data"
+      title="Habits"
       subtitle={activeHabit === "all" ? "Habits fulfilled each day" : `Frequency for ${activeHabit}`}
       action={(
         <select
@@ -358,9 +361,9 @@ function HabitChart({ data, detailData, habits, selectedHabit, onSelectedHabitCh
               <stop offset="100%" stopColor="rgb(var(--accent-rgb))" />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-          <XAxis dataKey="label" stroke="rgba(255,255,255,0.52)" tickLine={false} axisLine={false} fontSize={11} minTickGap={12} />
-          <YAxis allowDecimals={false} stroke="rgba(255,255,255,0.52)" tickLine={false} axisLine={false} fontSize={11} domain={[0, "dataMax"]} />
+          <CartesianGrid stroke="rgba(17,17,17,0.08)" vertical={false} />
+          <XAxis dataKey="label" stroke="rgba(17,17,17,0.54)" tickLine={false} axisLine={false} fontSize={11} minTickGap={12} />
+          <YAxis allowDecimals={false} stroke="rgba(17,17,17,0.54)" tickLine={false} axisLine={false} fontSize={11} domain={[0, "dataMax"]} />
           <Tooltip
             formatter={(value, name, item) => {
               if (activeHabit === "all") {
@@ -369,7 +372,7 @@ function HabitChart({ data, detailData, habits, selectedHabit, onSelectedHabitCh
 
               return [item?.payload?.scheduled ? (value ? "Done" : "Missed") : "Off day", activeHabit]
             }}
-            contentStyle={{ background: "rgba(18, 9, 34, 0.96)", border: "1px solid rgba(216, 121, 255, 0.32)", borderRadius: "12px", color: "#fff" }}
+            contentStyle={{ background: "#ffffff", border: "1px solid rgba(17, 17, 17, 0.14)", borderRadius: "8px", color: "#111111" }}
           />
           <Bar dataKey={activeHabit === "all" ? "completed" : "value"} radius={[8, 8, 2, 2]} fill="url(#habitGlow)" />
         </BarChart>
@@ -384,7 +387,7 @@ function RussianModalContent({ rhythm }) {
   return (
     <div className="space-y-3">
       <Card>
-        <div className="terminal-label">Russian word details</div>
+        <div className="terminal-label">Today&apos;s word</div>
         <div className="mt-3 data-title text-xl text-white">{repairText(currentWord?.word)}</div>
         <div className="terminal-subtext mt-1 text-sm">{repairText(currentWord?.phonetic)}</div>
         <div className="mt-2 text-sm text-white/85">{Array.isArray(currentWord?.meaning) ? currentWord.meaning.map(repairText).join(", ") : repairText(currentWord?.meaning)}</div>
@@ -392,7 +395,7 @@ function RussianModalContent({ rhythm }) {
       </Card>
 
       <Card>
-        <div className="terminal-label">Russian rhythm</div>
+        <div className="terminal-label">Review rhythm</div>
         <div className="mt-3 grid grid-cols-7 gap-2">
           {rhythm.map((entry) => (
             <div key={entry.dayKey} className={`rounded-[0.6rem] px-2 py-2 text-center text-[0.68rem] ${entry.studied ? "bg-[rgba(var(--accent-rgb),0.28)] text-white" : "bg-white/5 text-white/45"}`}>
@@ -403,7 +406,7 @@ function RussianModalContent({ rhythm }) {
       </Card>
 
       <Card>
-        <div className="terminal-label">Past words</div>
+        <div className="terminal-label">Recent words</div>
         <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
           {Array.from({ length: 7 }, (_, index) => getRussianWordByOffset(-index)).map((entry) => (
             <div key={`${entry.date.toISOString()}-${entry.word?.id}`} className="rounded-[0.7rem] border border-white/8 bg-black/20 px-3 py-2.5">
@@ -439,41 +442,6 @@ function Modal({ open, title, children, onClose }) {
   )
 }
 
-function ClearStorageButton({ onClear }) {
-  const [open, setOpen] = useState(false)
-
-  return (
-    <>
-      <div className="px-1 pb-7 pt-3">
-        <button type="button" onClick={() => setOpen(true)} className="danger-button w-full rounded-[0.85rem] px-4 py-3 text-xs uppercase tracking-[0.16em]">
-          Clear storage
-        </button>
-      </div>
-
-      <Modal open={open} title="Delete everything?" onClose={() => setOpen(false)}>
-        <div className="text-sm leading-relaxed text-white/78">
-          This deletes the saved habits, sleep logs, Russian study marks, theme choice, and all app data on this device.
-        </div>
-        <div className="mt-4 flex gap-2">
-          <button type="button" onClick={() => setOpen(false)} className="terminal-button-muted flex-1 rounded-[0.65rem] px-3 py-2.5 text-xs">
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              onClear()
-              setOpen(false)
-            }}
-            className="danger-button flex-1 rounded-[0.65rem] px-3 py-2.5 text-xs uppercase tracking-[0.12em]"
-          >
-            Yes, delete
-          </button>
-        </div>
-      </Modal>
-    </>
-  )
-}
-
 export default function Page() {
   const { system, setSystem } = useTeesha()
   const quote = useMemo(() => getQuoteOfTheDay(), [])
@@ -481,7 +449,6 @@ export default function Page() {
   const [isRussianOpen, setIsRussianOpen] = useState(false)
   const [selectedHabit, setSelectedHabit] = useState("all")
   const [burstActive, setBurstActive] = useState(false)
-  const [strobeActive, setStrobeActive] = useState(false)
 
   if (!system) return null
 
@@ -494,11 +461,13 @@ export default function Page() {
   const russianSeries = getRussianSeries(system)
   const russianStreak = getStreak(russianSeries, "studied")
   const sleepAverage = getAverage(sleepSeries.map((entry) => entry.sleep))
-  const habitDaysWithHabits = habitSeries.filter((entry) => entry.total > 0)
-  const habitPercentAverage = habitDaysWithHabits.length > 0
-    ? Math.round(habitDaysWithHabits.reduce((sum, entry) => sum + entry.percent, 0) / habitDaysWithHabits.length)
-    : 0
   const studiedToday = Boolean(todayLog.checkIn?.russianReviewed)
+  const sleepToday = Number(todayLog.checkIn?.sleep) || 0
+  const todayLabel = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric"
+  }).format(new Date())
 
   function triggerFeedback({ fullComplete = false } = {}) {
     setBurstActive(true)
@@ -516,10 +485,6 @@ export default function Page() {
       document.body.classList.remove("happy-flash")
     }, 1000)
 
-    if (fullComplete) {
-      setStrobeActive(true)
-      window.setTimeout(() => setStrobeActive(false), 2800)
-    }
   }
 
   function saveTodayCheckIn(patch) {
@@ -533,68 +498,62 @@ export default function Page() {
   }
 
   return (
-    <div className={`mx-auto max-w-[420px] px-3 pb-4 pt-3 sm:max-w-[520px] sm:px-4 sm:py-6 ${strobeActive ? "app-celebration app-strobe" : ""} ${burstActive ? "event-burst" : ""}`}>
-      <div className="app-frame rounded-[1.35rem] px-3 py-4 sm:px-4 sm:py-5">
-        <div className="app-content space-y-3 sm:space-y-4">
-          <header className="flex items-start justify-between gap-3 px-1 pb-1">
+    <div className={`mx-auto w-full max-w-[820px] px-4 py-6 sm:px-6 lg:py-10 ${burstActive ? "event-burst" : ""}`}>
+      <div className="app-frame">
+        <div className="app-content space-y-5">
+          <header className="app-header">
             <div>
-              <div className="terminal-label text-white/70">Daily reinforcement</div>
-              <h1 className="data-title mt-2 text-xl text-white sm:text-2xl">Track the essentials</h1>
+              <div className="terminal-label">Daily practice</div>
+              <h1 className="mt-2 text-3xl font-semibold leading-tight text-white sm:text-4xl">Track the essentials</h1>
+              <p className="terminal-subtext mt-2 max-w-2xl text-sm sm:text-base">
+                {todayLabel}. Habits, sleep, Russian, and the data that belongs to them.
+              </p>
             </div>
-            <div className="terminal-chip-muted rounded-[0.7rem] px-3 py-1.5 text-[0.68rem]">
-              {todayHabitStats.completed} / {todayHabitStats.total || 0}
+            <div className="header-metrics">
+              <StatPill label="Habits" value={`${todayHabitStats.completed}/${todayHabitStats.total || 0}`} />
+              <StatPill label="Sleep" value={`${sleepToday}h`} />
+              <StatPill label="Russian" value={`${russianStreak}d`} />
             </div>
           </header>
 
-          <div className="grid grid-cols-3 gap-2">
-            <StatPill label="Habits" value={`${habitPercentAverage || 0}%`} />
-            <StatPill label="Sleep" value={`${sleepAverage.toFixed(1)}h`} />
-            <StatPill label="Russian" value={`${russianStreak}d`} />
+          <div className="practice-flow">
+            <HabitTracker onPositiveTick={({ allDone }) => triggerFeedback({ fullComplete: allDone })} />
+            <SleepTracker
+              value={todayLog.checkIn?.sleep ?? 0}
+              average={sleepAverage}
+              onSave={(value) => {
+                saveTodayCheckIn({ sleep: value })
+                triggerFeedback({ fullComplete: value >= 7 && value <= 9 })
+              }}
+            />
+            <RussianWordCard
+              word={russianWord}
+              studied={studiedToday}
+              streak={russianStreak}
+              rhythm={russianSeries}
+              onToggleStudied={() => {
+                saveTodayCheckIn({ russianReviewed: !studiedToday })
+                if (!studiedToday) triggerFeedback()
+              }}
+              onOpen={() => setIsRussianOpen(true)}
+            />
+            <QuoteCard quote={quote} />
           </div>
 
-          <HabitTracker onPositiveTick={({ allDone }) => triggerFeedback({ fullComplete: allDone })} />
-
-          <RussianWordCard
-            word={russianWord}
-            studied={studiedToday}
-            streak={russianStreak}
-            rhythm={russianSeries}
-            onToggleStudied={() => {
-              saveTodayCheckIn({ russianReviewed: !studiedToday })
-              if (!studiedToday) triggerFeedback()
-            }}
-            onOpen={() => setIsRussianOpen(true)}
-          />
-
-          <QuoteCard quote={quote} />
-
-          <SleepTracker
-            value={todayLog.checkIn?.sleep ?? 0}
-            average={sleepAverage}
-            onSave={(value) => {
-              saveTodayCheckIn({ sleep: value })
-              triggerFeedback({ fullComplete: value >= 7 && value <= 9 })
-            }}
-          />
-
-          <SleepChart data={sleepSeries} />
-
-          <HabitChart
-            data={habitSeries}
-            detailData={habitDetailSeries}
-            habits={system.habits}
-            selectedHabit={selectedHabit}
-            onSelectedHabitChange={setSelectedHabit}
-          />
-
-          <ClearStorageButton onClear={() => {
-            clearStoredSystem()
-            window.location.reload()
-          }} />
+          <div className="chart-flow">
+            <SleepChart data={sleepSeries} />
+            <HabitChart
+              data={habitSeries}
+              detailData={habitDetailSeries}
+              habits={system.habits}
+              selectedHabit={selectedHabit}
+              onSelectedHabitChange={setSelectedHabit}
+            />
+          </div>
         </div>
       </div>
 
-      <Modal open={isRussianOpen} title="Russian word" onClose={() => setIsRussianOpen(false)}>
+      <Modal open={isRussianOpen} title="Russian practice" onClose={() => setIsRussianOpen(false)}>
         <RussianModalContent rhythm={russianSeries} />
       </Modal>
     </div>

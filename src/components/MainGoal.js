@@ -68,10 +68,10 @@ export default function MainGoal() {
       <div className="section-heading">
         <div>
           <div className="terminal-label">Primary Objective</div>
-          <h2 className="mt-2 text-[2rem] font-semibold leading-[1.02] text-white">{system.mainGoal.title}</h2>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight text-white sm:text-[2rem] sm:leading-[1.02]">{system.mainGoal.title}</h2>
         </div>
         <div className="text-right">
-          <div className="neon-number text-[2.3rem] money-primary">{Math.round(progress * 100)}%</div>
+          <div className="neon-number text-3xl money-primary sm:text-[2.3rem]">{Math.round(progress * 100)}%</div>
         </div>
       </div>
 

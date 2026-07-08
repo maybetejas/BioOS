@@ -157,7 +157,7 @@ export function TeeshaProvider({ children }) {
       return
     }
 
-    const accent = system?.themeAccent ?? DEFAULT_THEME_ACCENT
+    const accent = DEFAULT_THEME_ACCENT
     const palette = buildThemePalette(accent)
 
     document.documentElement.style.setProperty("--accent", accent)
